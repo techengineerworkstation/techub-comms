@@ -1,0 +1,8 @@
+{
+  "framework": "vite",
+  "buildCommand": "npx turbo build --filter=web",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
+}

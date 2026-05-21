@@ -1,0 +1,62 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-beige-50: #fdf8f0;
+  --color-beige-100: #f5ead6;
+  --color-beige-200: #ecdcb8;
+  --color-beige-300: #dfc89a;
+  --color-beige-400: #d4b57e;
+  --color-beige-500: #c4a06a;
+  --color-teal-50: #e6f7f7;
+  --color-teal-100: #b3e8e8;
+  --color-teal-200: #80d9d9;
+  --color-teal-300: #4dcaca;
+  --color-teal-400: #26bfbf;
+  --color-teal-500: #009999;
+  --color-teal-600: #007a7a;
+  --color-teal-700: #005c5c;
+  --color-bg: var(--color-beige-50);
+  --color-surface: #ffffff;
+  --color-primary: var(--color-teal-500);
+  --color-primary-hover: var(--color-teal-600);
+  --color-text: #1a1a1a;
+  --color-text-muted: #6b7280;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  margin: 0;
+  min-height: 100vh;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.btn-primary {
+  @apply bg-teal-500 hover:bg-teal-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+}
+
+.btn-secondary {
+  @apply bg-beige-200 hover:bg-beige-300 text-beige-900 font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+}
+
+.btn-danger {
+  @apply bg-red-500 hover:bg-red-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+}
+
+.btn-icon {
+  @apply p-2 rounded-full hover:bg-beige-100 transition-colors duration-200;
+}
+
+.card {
+  @apply bg-white rounded-xl shadow-sm border border-beige-100;
+}
+
+.input {
+  @apply w-full px-4 py-2 border border-beige-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white;
+}

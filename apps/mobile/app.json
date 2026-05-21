@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "Techub Comms",
+    "slug": "techub-comms",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "scheme": "techub-comms",
+    "splash": {
+      "backgroundColor": "#009999",
+      "resizeMode": "contain"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.techub.comms"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#009999"
+      },
+      "package": "com.techub.comms"
+    },
+    "plugins": ["expo-router", "expo-camera"],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

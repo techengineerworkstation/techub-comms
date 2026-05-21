@@ -1,0 +1,22 @@
+{
+  "name": "techub-comms",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo dev",
+    "build": "turbo build",
+    "lint": "turbo lint",
+    "dev:web": "turbo dev --filter=web",
+    "dev:server": "turbo dev --filter=server",
+    "dev:mobile": "turbo dev --filter=mobile"
+  },
+  "devDependencies": {
+    "turbo": "^2.3.0",
+    "typescript": "^5.7.0"
+  },
+  "packageManager": "npm@10.0.0"
+}

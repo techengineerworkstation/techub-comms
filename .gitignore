@@ -1,1 +1,11 @@
-
+node_modules/
+dist/
+.env
+.env.local
+*.log
+.turbo/
+.expo/
+*.tsbuildinfo
+.vercel
+*.key
+!apps/server/keys/public.key
