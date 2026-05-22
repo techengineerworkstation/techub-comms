@@ -1,7 +1,25 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { talkAction, inputAction, connectAction, recordAction } from '../services/nccoBuilder';
+import { config } from '../config';
 
 export const webhookRouter = Router();
+
+// Middleware to validate Vonage Video API callback verification tokens
+function validateVerificationToken(tokenKey: keyof typeof config.verificationTokens) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const expectedToken = config.verificationTokens[tokenKey];
+    if (!expectedToken) {
+      // No token configured — skip validation (dev mode)
+      return next();
+    }
+    const receivedToken = req.body?.verificationToken || req.headers['x-vonage-verification-token'];
+    if (receivedToken && receivedToken !== expectedToken) {
+      console.warn(`[Webhook Auth] Invalid verification token for ${tokenKey}`);
+      return res.status(403).json({ error: 'Invalid verification token' });
+    }
+    next();
+  };
+}
 
 // Answer webhook — called when outbound call is answered
 webhookRouter.all('/answer', (req: Request, res: Response) => {
@@ -84,41 +102,41 @@ webhookRouter.post('/recording', (req: Request, res: Response) => {
 // ─── Vonage Video API Callbacks ─────────────────────────────────────────────
 
 // Session monitoring callback
-webhookRouter.post('/monitoring-event', (req: Request, res: Response) => {
+webhookRouter.post('/monitoring-event', validateVerificationToken('monitoring'), (req: Request, res: Response) => {
   console.log('[Monitoring Event]', JSON.stringify(req.body, null, 2));
   res.status(200).send('OK');
 });
 
 // Archive recording callback
-webhookRouter.post('/recording-event', (req: Request, res: Response) => {
+webhookRouter.post('/recording-event', validateVerificationToken('recording'), (req: Request, res: Response) => {
   const { status, id, name, sessionId, createdAt, duration, url, reason } = req.body;
   console.log(`[Recording Event] Archive ${id}: ${status} - ${name}`);
   res.status(200).send('OK');
 });
 
 // Broadcast status callback
-webhookRouter.post('/broadcast-event', (req: Request, res: Response) => {
+webhookRouter.post('/broadcast-event', validateVerificationToken('broadcast'), (req: Request, res: Response) => {
   const { status, id, sessionId, broadcastUrls } = req.body;
   console.log(`[Broadcast Event] ${id}: ${status}`);
   res.status(200).send('OK');
 });
 
 // Experience Composer callback
-webhookRouter.post('/composer-event', (req: Request, res: Response) => {
+webhookRouter.post('/composer-event', validateVerificationToken('composer'), (req: Request, res: Response) => {
   const { status, id, sessionId, name, url, reason } = req.body;
   console.log(`[Composer Event] ${id}: ${status} - ${name}`);
   res.status(200).send('OK');
 });
 
 // Captions callback
-webhookRouter.post('/captions-event', (req: Request, res: Response) => {
+webhookRouter.post('/captions-event', validateVerificationToken('captions'), (req: Request, res: Response) => {
   const { captionsId, status, sessionId, reason } = req.body;
   console.log(`[Captions Event] ${captionsId}: ${status}`);
   res.status(200).send('OK');
 });
 
 // SIP monitoring callback
-webhookRouter.post('/sip-monitoring-event', (req: Request, res: Response) => {
+webhookRouter.post('/sip-monitoring-event', validateVerificationToken('sipMonitoring'), (req: Request, res: Response) => {
   console.log('[SIP Monitoring Event]', JSON.stringify(req.body, null, 2));
   res.status(200).send('OK');
 });
