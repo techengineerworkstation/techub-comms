@@ -27,7 +27,24 @@ EOF
 
 ---
 
-## Step 2: Deploy Server to Railway
+## Step 2: Push to GitHub
+
+```bash
+cd /home/hptechworkpc/Apps/techub-comms
+
+# Stage all changes
+git add .
+
+# Commit
+git commit -m "Fix critical issues: video subscribers, OpenTok CDN, mobile SDK"
+
+# Push to GitHub
+git push origin main
+```
+
+---
+
+## Step 3: Deploy Server to Railway
 
 ### Option A: Railway Dashboard (Recommended)
 
@@ -36,7 +53,7 @@ EOF
 3. Select `techengineerworkstation/techub-comms`
 4. Railway will detect the `railway.json` config automatically
 5. Set the **Root Directory** to `/` (monorepo root — railway.json handles the rest)
-6. Go to **Variables** tab and add all environment variables from `apps/server/.env.example`:
+6. Go to **Variables** tab and add all environment variables:
 
    | Variable | Value |
    |----------|-------|
@@ -58,9 +75,8 @@ EOF
    - **Option A**: Use Railway's **Volume** feature to mount a persistent disk with the key file
    - **Option B**: Encode the private key as base64 and add it as `VONAGE_PRIVATE_KEY_B64`, then decode it at startup (requires code change)
 
-8. Go to **Settings** > **Networking** > **Custom Domain** and add `thbtechub.sbs`
-9. Railway will give you a DNS target (CNAME record). Update your domain's DNS:
-   - Add a CNAME record: `thbtechub.sbs` → Railway's provided target
+8. Go to **Settings** > **Networking** > **Custom Domain** and add `api.thbtechub.sbs`
+9. Railway will give you a DNS target (CNAME record). Save this for DNS setup.
 
 ### Option B: Railway CLI
 
@@ -88,17 +104,28 @@ railway up
 
 ---
 
-## Step 3: Add Domain to Vercel
+## Step 4: Deploy Frontend to Vercel
 
 ### Option A: Vercel Dashboard (Recommended)
 
-1. Go to [vercel.com](https://vercel.com) > project **techub-comms**
-2. Go to **Settings** > **Domains**
-3. Add `thbtechub.sbs`
-4. Vercel will show DNS instructions:
-   - If using the domain for the frontend only: Add an **A record** pointing to `76.76.21.21`
-   - If sharing the domain between frontend and backend: Use a **CNAME** to `cname.vercel-dns.com` for the root, and route `/api/*` to Railway via Vercel rewrites
-5. Also add `www.thbtechub.sbs` if needed
+1. Go to [vercel.com](https://vercel.com) and log in
+2. Click **"Add New"** > **"Project"**
+3. Import `techengineerworkstation/techub-comms` from GitHub
+4. Configure:
+   - **Framework Preset**: Vite
+   - **Root Directory**: `apps/web`
+   - **Build Command**: `npx turbo build --filter=web`
+   - **Output Directory**: `dist`
+5. Add **Environment Variables**:
+
+   | Variable | Value |
+   |----------|-------|
+   | `VITE_API_URL` | `https://api.thbtechub.sbs` |
+   | `VITE_VONAGE_API_KEY` | `ff261ddc` |
+
+6. Click **Deploy**
+7. After deploy, go to **Settings** > **Domains** and add `thbtechub.sbs`
+8. Vercel will show DNS instructions. Save these for DNS setup.
 
 ### Option B: Vercel CLI
 
@@ -109,8 +136,9 @@ npm i -g vercel
 # Login
 vercel login
 
-# Link to project
-vercel link
+# Deploy from web app directory
+cd apps/web
+vercel --prod
 
 # Add domain
 vercel domains add thbtechub.sbs
@@ -118,52 +146,38 @@ vercel domains add thbtechub.sbs
 
 ---
 
-### Vercel Environment Variables
+## Step 5: DNS Configuration for thbtechub.sbs
 
-When using the subdomain split approach (Approach A below), set this env var on Vercel so the frontend knows where to send API requests:
+Since both Vercel (frontend) and Railway (backend) need to be accessible on the same domain, use a **subdomain split**:
 
-| Variable | Value |
-|----------|-------|
-| `VITE_API_URL` | `https://api.thbtechub.sbs` |
+### DNS Records to Add in Hostinger
 
-If using the Vercel proxy approach (Approach B), leave `VITE_API_URL` empty.
+| Record Type | Name | Value | TTL |
+|-------------|------|-------|-----|
+| **A** | `@` | `76.76.21.21` | 3600 |
+| **CNAME** | `www` | `cname.vercel-dns.com` | 3600 |
+| **CNAME** | `api` | `<your-railway-cname-target>` | 3600 |
 
----
+### Step-by-Step in Hostinger hPanel
 
-## Step 4: DNS Configuration for thbtechub.sbs
+1. Log in to [hpanel.hostinger.com](https://hpanel.hostinger.com)
+2. Go to **Domains** > **thbtechub.sbs** > **DNS / Nameservers**
+3. Add the three records above:
+   - **A record**: Name `@`, Value `76.76.21.21` (Vercel's IP)
+   - **CNAME record**: Name `www`, Value `cname.vercel-dns.com`
+   - **CNAME record**: Name `api`, Value your Railway CNAME target (e.g., `xxx.up.railway.app`)
+4. Save changes. DNS propagation takes 5-30 minutes typically.
 
-Since both Vercel (frontend) and Railway (backend) need to be accessible on the same domain, you have two approaches:
+### Finding Your Railway CNAME Target
 
-### Approach A: Subdomain Split (Recommended)
-
-| Record | Type | Value |
-|--------|------|-------|
-| `thbtechub.sbs` | A | `76.76.21.21` (Vercel) |
-| `api.thbtechub.sbs` | CNAME | Railway's CNAME target |
-
-Then update the server config:
-- `BASE_URL=https://api.thbtechub.sbs`
-- Update Vonage Dashboard callback URLs to use `https://api.thbtechub.sbs/...`
-
-### Approach B: Vercel as Proxy (Advanced)
-
-Use Vercel rewrites to proxy `/api/*` to Railway:
-
-```json
-// vercel.json
-{
-  "rewrites": [
-    { "source": "/api/:path*", "destination": "https://your-railway-app.up.railway.app/api/:path*" },
-    { "source": "/(.*)", "destination": "/index.html" }
-  ]
-}
-```
-
-This keeps everything on `thbtechub.sbs` but adds latency for API calls.
+1. Go to Railway dashboard > your project > **Settings** > **Networking**
+2. Click **Custom Domain** > add `api.thbtechub.sbs`
+3. Railway will show a CNAME target (e.g., `b76wt8si.up.railway.app`)
+4. Use this as the value for your `api` CNAME record in Hostinger
 
 ---
 
-## Step 5: Update Vonage Dashboard Callback URLs
+## Step 6: Update Vonage Dashboard Callback URLs
 
 Once the server is deployed, update the Vonage Dashboard:
 
@@ -193,3 +207,32 @@ curl -X POST https://api.thbtechub.sbs/monitoring-event \
   -H "Content-Type: application/json" \
   -d '{"test": true}'
 ```
+
+---
+
+## Environment Variables Summary
+
+### Railway (Server)
+
+| Variable | Value |
+|----------|-------|
+| `VONAGE_API_KEY` | Your Vonage API key |
+| `VONAGE_API_SECRET` | Your Vonage API secret |
+| `VONAGE_APPLICATION_ID` | `7e59865f-d02d-441c-9409-0ed517fcebd7` |
+| `VONAGE_PRIVATE_KEY_PATH` | `./keys/private.key` |
+| `VONAGE_NUMBER` | Your Vonage phone number |
+| `BASE_URL` | `https://api.thbtechub.sbs` |
+| `FRONTEND_URL` | `https://thbtechub.sbs` |
+| `VONAGE_MONITORING_TOKEN` | `_5TZiliad-_H33o5QjT3ZDM6lnYEmMVswhrkYATn3HY` |
+| `VONAGE_RECORDING_TOKEN` | `sOdeJ-n4lBzxVwwnikUJmjHInnXozp-nqNEy0UTXnM4` |
+| `VONAGE_BROADCAST_TOKEN` | `9pSBRhJZcw__eHA8YyZw_IHgJHq-7cExhTjJmuvgG9Y` |
+| `VONAGE_COMPOSER_TOKEN` | `7qGspBn_4T-UPoBRhVSZLJf5a_5zD7QN6TYkHsAzcdY` |
+| `VONAGE_CAPTIONS_TOKEN` | `41dl4aDqN8EhA2iyvGzZvRjt2mRUvZ4zP-4SaU7ANmk` |
+| `VONAGE_SIP_MONITORING_TOKEN` | `LLR7ioj122iXcEi9iWPDnX6ioVN04KD2rZRVTmkjSJM` |
+
+### Vercel (Frontend)
+
+| Variable | Value |
+|----------|-------|
+| `VITE_API_URL` | `https://api.thbtechub.sbs` |
+| `VITE_VONAGE_API_KEY` | `ff261ddc` |

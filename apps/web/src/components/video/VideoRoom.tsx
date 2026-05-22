@@ -18,6 +18,7 @@ export default function VideoRoom({ room, sessionId, token, apiKey, onLeave }: V
   const sessionRef = useRef<any>(null);
   const publisherRef = useRef<any>(null);
   const subscriberRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const pendingStreamsRef = useRef<Map<string, any>>(new Map());
   const [isConnected, setIsConnected] = useState(false);
   const [participants, setParticipants] = useState<any[]>([]);
   const { isChatOpen, isParticipantsOpen, isRecording, isScreenSharing, setScreenSharing, setCaptionsId } = useSessionStore();
@@ -31,28 +32,34 @@ export default function VideoRoom({ room, sessionId, token, apiKey, onLeave }: V
     }
   }, []);
 
-  const handleStreamCreated = useCallback((event: any) => {
-    const stream = event.stream;
-    const connectionId = stream.connection.connectionId;
-    setParticipants((prev) => [...prev, { stream, id: connectionId }]);
-
-    // Subscribe to the remote stream after DOM element is available
-    setTimeout(() => {
+  // Subscribe to pending streams once their DOM refs are available
+  useEffect(() => {
+    pendingStreamsRef.current.forEach((stream, connectionId) => {
       const container = subscriberRefs.current.get(connectionId);
       if (container && sessionRef.current) {
-        const OT = (window as any).OT;
         sessionRef.current.subscribe(stream, container, {
           insertMode: 'replace',
           width: '100%',
           height: '100%',
           style: { buttonDisplayMode: 'off' },
         });
+        pendingStreamsRef.current.delete(connectionId);
       }
-    }, 100);
+    });
+  }, [participants]);
+
+  const handleStreamCreated = useCallback((event: any) => {
+    const stream = event.stream;
+    const connectionId = stream.connection.connectionId;
+    pendingStreamsRef.current.set(connectionId, stream);
+    setParticipants((prev) => [...prev, { stream, id: connectionId }]);
   }, []);
 
   const handleStreamDestroyed = useCallback((event: any) => {
-    setParticipants((prev) => prev.filter((p) => p.id !== event.stream.connection.connectionId));
+    const connectionId = event.stream.connection.connectionId;
+    pendingStreamsRef.current.delete(connectionId);
+    subscriberRefs.current.delete(connectionId);
+    setParticipants((prev) => prev.filter((p) => p.id !== connectionId));
   }, []);
 
   useEffect(() => {
