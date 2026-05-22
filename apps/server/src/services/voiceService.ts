@@ -1,5 +1,6 @@
 import { Auth } from '@vonage/auth';
 import { Voice } from '@vonage/voice';
+import { config } from '../config';
 import type { NCCOAction } from '../types';
 
 class VoiceService {
@@ -8,8 +9,8 @@ class VoiceService {
 
   constructor() {
     this.credentials = new Auth({
-      applicationId: process.env.VONAGE_APPLICATION_ID!,
-      privateKey: process.env.VONAGE_PRIVATE_KEY || '',
+      applicationId: config.vonage.applicationId,
+      privateKey: config.vonage.privateKeyPath,
     });
     this.voice = new Voice(this.credentials);
   }

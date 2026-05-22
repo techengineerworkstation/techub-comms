@@ -19,8 +19,11 @@ app.use('/api/video', videoRouter);
 app.use('/api/voice', voiceRouter);
 app.use('/api/message', messageRouter);
 
-// Webhooks
+// Voice Webhooks (under /webhooks prefix)
 app.use('/webhooks', webhookRouter);
+
+// Vonage Video API Callbacks (mounted at root per Vonage dashboard config)
+app.use('/', webhookRouter);
 
 // Health check
 app.get('/health', (_req, res) => {

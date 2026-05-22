@@ -7,6 +7,7 @@ import {
   type SingleArchiveResponse,
   type EnableCaptionResponse,
 } from '@vonage/video';
+import { config } from '../config';
 
 class VideoService {
   private credentials: Auth;
@@ -15,8 +16,8 @@ class VideoService {
 
   constructor() {
     this.credentials = new Auth({
-      applicationId: process.env.VONAGE_APPLICATION_ID!,
-      privateKey: process.env.VONAGE_PRIVATE_KEY || '',
+      applicationId: config.vonage.applicationId,
+      privateKey: config.vonage.privateKeyPath,
     });
     this.video = new Video(this.credentials);
   }

@@ -1,5 +1,6 @@
 import { Auth } from '@vonage/auth';
 import { Messages } from '@vonage/messages';
+import { config } from '../config';
 import type { SendMessageOptions } from '../types';
 
 class MessageService {
@@ -8,8 +9,8 @@ class MessageService {
 
   constructor() {
     this.credentials = new Auth({
-      apiKey: process.env.VONAGE_API_KEY!,
-      apiSecret: process.env.VONAGE_API_SECRET!,
+      apiKey: config.vonage.apiKey,
+      apiSecret: config.vonage.apiSecret,
     });
     this.messages = new Messages(this.credentials);
   }

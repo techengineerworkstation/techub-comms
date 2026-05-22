@@ -80,3 +80,45 @@ webhookRouter.post('/recording', (req: Request, res: Response) => {
   console.log(`[Recording] ${recording_uuid}: ${recording_url} (${format}, ${size} bytes)`);
   res.status(200).send('OK');
 });
+
+// ─── Vonage Video API Callbacks ─────────────────────────────────────────────
+
+// Session monitoring callback
+webhookRouter.post('/monitoring-event', (req: Request, res: Response) => {
+  console.log('[Monitoring Event]', JSON.stringify(req.body, null, 2));
+  res.status(200).send('OK');
+});
+
+// Archive recording callback
+webhookRouter.post('/recording-event', (req: Request, res: Response) => {
+  const { status, id, name, sessionId, createdAt, duration, url, reason } = req.body;
+  console.log(`[Recording Event] Archive ${id}: ${status} - ${name}`);
+  res.status(200).send('OK');
+});
+
+// Broadcast status callback
+webhookRouter.post('/broadcast-event', (req: Request, res: Response) => {
+  const { status, id, sessionId, broadcastUrls } = req.body;
+  console.log(`[Broadcast Event] ${id}: ${status}`);
+  res.status(200).send('OK');
+});
+
+// Experience Composer callback
+webhookRouter.post('/composer-event', (req: Request, res: Response) => {
+  const { status, id, sessionId, name, url, reason } = req.body;
+  console.log(`[Composer Event] ${id}: ${status} - ${name}`);
+  res.status(200).send('OK');
+});
+
+// Captions callback
+webhookRouter.post('/captions-event', (req: Request, res: Response) => {
+  const { captionsId, status, sessionId, reason } = req.body;
+  console.log(`[Captions Event] ${captionsId}: ${status}`);
+  res.status(200).send('OK');
+});
+
+// SIP monitoring callback
+webhookRouter.post('/sip-monitoring-event', (req: Request, res: Response) => {
+  console.log('[SIP Monitoring Event]', JSON.stringify(req.body, null, 2));
+  res.status(200).send('OK');
+});
