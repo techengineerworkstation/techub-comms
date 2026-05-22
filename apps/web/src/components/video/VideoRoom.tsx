@@ -71,20 +71,6 @@ export default function VideoRoom({ room, sessionId, token, apiKey, onLeave }: V
         session.on('streamCreated', handleStreamCreated);
         session.on('streamDestroyed', handleStreamDestroyed);
 
-        // Handle chat signals
-        session.on('signal:chat', (event: any) => {
-          if (event.from?.connectionId !== session.connection?.connectionId) {
-            const data = JSON.parse(event.data || '{}');
-            useSessionStore.getState().addChatMessage?.({
-              id: Date.now().toString(),
-              sender: data.sender || 'Participant',
-              text: data.text,
-              timestamp: new Date(),
-              isOwn: false,
-            });
-          }
-        });
-
         session.connect(token, (error: any) => {
           if (error) {
             console.error('Session connection error:', error);
