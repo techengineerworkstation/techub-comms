@@ -43,7 +43,17 @@ class VoiceService {
   }
 
   async modifyCall(uuid: string, action: string) {
-    return this.voice.updateCall(uuid, { action } as any);
+    const voice = this.voice as Record<string, any>;
+    if (action === 'hangup') {
+      return voice.hangupCall?.(uuid) ?? this.voice.createOutboundCall({ uuid, action: 'hangup' } as any);
+    }
+    if (action === 'mute' || action === 'earmuff') {
+      return voice.muteCall?.(uuid) ?? this.voice.createOutboundCall({ uuid, action } as any);
+    }
+    if (action === 'unmute' || action === 'unearmuff') {
+      return voice.unmuteCall?.(uuid) ?? this.voice.createOutboundCall({ uuid, action } as any);
+    }
+    throw new Error(`Unsupported call action: ${action}`);
   }
 
   async playTTS(uuid: string, text: string, language = 'en-US', voiceName = 'Amy') {
