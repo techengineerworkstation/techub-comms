@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Send, MessageSquare, Image } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 export default function MessagesPage() {
   const [to, setTo] = useState('');
   const [from, setFrom] = useState('');
@@ -18,7 +20,7 @@ export default function MessagesPage() {
 
     try {
       const endpoint = channel === 'whatsapp' ? '/api/message/send-whatsapp' : '/api/message/send';
-      const res = await fetch(endpoint, {
+      const res = await fetch(`${API_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ to, from, text }),

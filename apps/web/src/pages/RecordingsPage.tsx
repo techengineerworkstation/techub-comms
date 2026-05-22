@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Play, Download, Trash2, RefreshCw } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 interface Recording {
   id: string;
   name: string;
@@ -19,7 +21,7 @@ export default function RecordingsPage() {
     if (!roomFilter) return;
     setLoading(true);
     try {
-      const res = await fetch(`/api/video/session/${roomFilter}/archives`);
+      const res = await fetch(`${API_URL}/api/video/session/${roomFilter}/archives`);
       const data = await res.json();
       setRecordings(data.archives || []);
     } catch (err) {

@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import VideoRoom from '../components/video/VideoRoom';
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 export default function MeetingRoom() {
   const { room } = useParams<{ room: string }>();
   const navigate = useNavigate();
@@ -14,7 +16,7 @@ export default function MeetingRoom() {
 
     const fetchSession = async () => {
       try {
-        const res = await fetch(`/api/video/session/${room}`);
+        const res = await fetch(`${API_URL}/api/video/session/${room}`);
         if (!res.ok) throw new Error('Failed to create session');
         const data = await res.json();
         setSessionData(data);

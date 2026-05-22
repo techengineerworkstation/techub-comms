@@ -45,7 +45,7 @@ EOF
    | `VONAGE_APPLICATION_ID` | `7e59865f-d02d-441c-9409-0ed517fcebd7` |
    | `VONAGE_PRIVATE_KEY_PATH` | `./keys/private.key` |
    | `VONAGE_NUMBER` | Your Vonage phone number |
-   | `BASE_URL` | `https://thbtechub.sbs` |
+   | `BASE_URL` | `https://api.thbtechub.sbs` |
    | `FRONTEND_URL` | `https://thbtechub.sbs` |
    | `VONAGE_MONITORING_TOKEN` | `_5TZiliad-_H33o5QjT3ZDM6lnYEmMVswhrkYATn3HY` |
    | `VONAGE_RECORDING_TOKEN` | `sOdeJ-n4lBzxVwwnikUJmjHInnXozp-nqNEy0UTXnM4` |
@@ -78,7 +78,7 @@ railway link
 railway variables set VONAGE_API_KEY="your_key"
 railway variables set VONAGE_API_SECRET="your_secret"
 railway variables set VONAGE_APPLICATION_ID="7e59865f-d02d-441c-9409-0ed517fcebd7"
-railway variables set BASE_URL="https://thbtechub.sbs"
+railway variables set BASE_URL="https://api.thbtechub.sbs"
 railway variables set FRONTEND_URL="https://thbtechub.sbs"
 # ... (set all other variables from .env.example)
 
@@ -115,6 +115,18 @@ vercel link
 # Add domain
 vercel domains add thbtechub.sbs
 ```
+
+---
+
+### Vercel Environment Variables
+
+When using the subdomain split approach (Approach A below), set this env var on Vercel so the frontend knows where to send API requests:
+
+| Variable | Value |
+|----------|-------|
+| `VITE_API_URL` | `https://api.thbtechub.sbs` |
+
+If using the Vercel proxy approach (Approach B), leave `VITE_API_URL` empty.
 
 ---
 

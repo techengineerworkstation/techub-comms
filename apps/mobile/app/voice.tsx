@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { config } from './config';
 
 export default function VoiceScreen() {
   const [phoneNumber, setPhoneNumber] = useState('');
@@ -14,7 +15,7 @@ export default function VoiceScreen() {
     }
 
     try {
-      const res = await fetch('http://localhost:3039/api/voice/call', {
+      const res = await fetch(`${config.apiBaseUrl}/api/voice/call`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -34,7 +35,7 @@ export default function VoiceScreen() {
   const handleHangup = async () => {
     if (!callUuid) return;
     try {
-      await fetch(`http://localhost:3039/api/voice/call/${callUuid}`, {
+      await fetch(`${config.apiBaseUrl}/api/voice/call/${callUuid}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'hangup' }),

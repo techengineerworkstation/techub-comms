@@ -19,10 +19,8 @@ app.use('/api/video', videoRouter);
 app.use('/api/voice', voiceRouter);
 app.use('/api/message', messageRouter);
 
-// Voice Webhooks (under /webhooks prefix)
-app.use('/webhooks', webhookRouter);
-
-// Vonage Video API Callbacks (mounted at root per Vonage dashboard config)
+// Webhooks: mounted at root so Vonage Video API callbacks (which have no prefix)
+// and Voice webhooks (which include /webhooks in their answer_url) both work.
 app.use('/', webhookRouter);
 
 // Health check

@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, type RefObject } from 'react';
 import {
   Mic,
   MicOff,
   Video,
   VideoOff,
   Monitor,
+  MonitorOff,
   PhoneOff,
   MessageSquare,
   Users,
@@ -18,15 +19,26 @@ interface VideoControlsProps {
   onLeave: () => void;
   onStartRecording: () => void;
   onStopRecording: () => void;
+  publisherRef: RefObject<any>;
+  onToggleScreenShare: () => void;
+  onToggleCaptions: () => void;
 }
 
-export default function VideoControls({ room, onLeave, onStartRecording, onStopRecording }: VideoControlsProps) {
+export default function VideoControls({
+  room,
+  onLeave,
+  onStartRecording,
+  onStopRecording,
+  publisherRef,
+  onToggleScreenShare,
+  onToggleCaptions,
+}: VideoControlsProps) {
   const {
     isRecording,
     isScreenSharing,
     isChatOpen,
     isParticipantsOpen,
-    setScreenSharing,
+    captionsId,
     toggleChat,
     toggleParticipants,
   } = useSessionStore();
@@ -34,10 +46,26 @@ export default function VideoControls({ room, onLeave, onStartRecording, onStopR
   const [isMuted, setIsMuted] = useState(false);
   const [isVideoOff, setIsVideoOff] = useState(false);
 
+  const handleToggleMute = () => {
+    const publisher = publisherRef.current;
+    if (publisher) {
+      publisher.publishAudio(!isMuted);
+    }
+    setIsMuted(!isMuted);
+  };
+
+  const handleToggleVideo = () => {
+    const publisher = publisherRef.current;
+    if (publisher) {
+      publisher.publishVideo(!isVideoOff);
+    }
+    setIsVideoOff(!isVideoOff);
+  };
+
   return (
     <div className="h-20 bg-white border-t border-beige-100 flex items-center justify-center gap-3 px-6">
       <button
-        onClick={() => setIsMuted(!isMuted)}
+        onClick={handleToggleMute}
         className={`btn-icon ${isMuted ? 'bg-red-100 text-red-500' : 'text-gray-600 hover:bg-beige-100'}`}
         title={isMuted ? 'Unmute' : 'Mute'}
       >
@@ -45,7 +73,7 @@ export default function VideoControls({ room, onLeave, onStartRecording, onStopR
       </button>
 
       <button
-        onClick={() => setIsVideoOff(!isVideoOff)}
+        onClick={handleToggleVideo}
         className={`btn-icon ${isVideoOff ? 'bg-red-100 text-red-500' : 'text-gray-600 hover:bg-beige-100'}`}
         title={isVideoOff ? 'Turn on camera' : 'Turn off camera'}
       >
@@ -53,11 +81,11 @@ export default function VideoControls({ room, onLeave, onStartRecording, onStopR
       </button>
 
       <button
-        onClick={() => setScreenSharing(!isScreenSharing)}
+        onClick={onToggleScreenShare}
         className={`btn-icon ${isScreenSharing ? 'bg-teal-100 text-teal-600' : 'text-gray-600 hover:bg-beige-100'}`}
         title="Screen share"
       >
-        <Monitor size={22} />
+        {isScreenSharing ? <MonitorOff size={22} /> : <Monitor size={22} />}
       </button>
 
       <button
@@ -85,7 +113,8 @@ export default function VideoControls({ room, onLeave, onStartRecording, onStopR
       </button>
 
       <button
-        className="btn-icon text-gray-600 hover:bg-beige-100"
+        onClick={onToggleCaptions}
+        className={`btn-icon ${captionsId ? 'bg-teal-100 text-teal-600' : 'text-gray-600 hover:bg-beige-100'}`}
         title="Live captions"
       >
         <Captions size={22} />
@@ -103,4 +132,3 @@ export default function VideoControls({ room, onLeave, onStartRecording, onStopR
     </div>
   );
 }
-

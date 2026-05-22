@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { Phone, PhoneOff, Mic, MicOff, Hash } from 'lucide-react';
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 export default function VoicePage() {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [callText, setCallText] = useState('');
@@ -17,7 +19,7 @@ export default function VoicePage() {
       if (type === 'conference') body.conference = 'techub-room';
       if (type === 'simple') body.text = callText || 'Hello from Techub Comms.';
 
-      const res = await fetch('/api/voice/call', {
+      const res = await fetch(`${API_URL}/api/voice/call`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(body),
@@ -33,7 +35,7 @@ export default function VoicePage() {
   const handleHangup = async () => {
     if (!activeCall) return;
     try {
-      await fetch(`/api/voice/call/${activeCall.uuid}`, {
+      await fetch(`${API_URL}/api/voice/call/${activeCall.uuid}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'hangup' }),
@@ -48,7 +50,7 @@ export default function VoicePage() {
   const handleMute = async () => {
     if (!activeCall) return;
     const action = isMuted ? 'unmute' : 'mute';
-    await fetch(`/api/voice/call/${activeCall.uuid}`, {
+    await fetch(`${API_URL}/api/voice/call/${activeCall.uuid}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ action }),
@@ -58,7 +60,7 @@ export default function VoicePage() {
 
   const handleSendDTMF = async () => {
     if (!activeCall || !dtmf) return;
-    await fetch(`/api/voice/dtmf/${activeCall.uuid}`, {
+    await fetch(`${API_URL}/api/voice/dtmf/${activeCall.uuid}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ digits: dtmf }),
@@ -68,7 +70,7 @@ export default function VoicePage() {
 
   const handlePlayTTS = async () => {
     if (!activeCall || !callText) return;
-    await fetch(`/api/voice/talk/${activeCall.uuid}`, {
+    await fetch(`${API_URL}/api/voice/talk/${activeCall.uuid}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ text: callText, language: 'en-US', voiceName: 'Amy' }),

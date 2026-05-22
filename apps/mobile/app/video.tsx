@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { config } from './config';
 
 export default function VideoScreen() {
   const [roomName, setRoomName] = useState('');
@@ -13,7 +14,7 @@ export default function VideoScreen() {
 
     setIsJoining(true);
     try {
-      const res = await fetch(`http://localhost:3039/api/video/session/${roomName.trim()}`);
+      const res = await fetch(`${config.apiBaseUrl}/api/video/session/${roomName.trim()}`);
       if (!res.ok) throw new Error('Failed to create session');
       const data = await res.json();
       Alert.alert('Session Ready', `Session ID: ${data.sessionId}\nToken received. Ready to join!`);

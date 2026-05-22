@@ -43,37 +43,47 @@ class VoiceService {
   }
 
   async modifyCall(uuid: string, action: string) {
-    return (this.voice as any).updateCall(uuid, { action });
+    return this.voice.updateCall(uuid, { action } as any);
   }
 
   async playTTS(uuid: string, text: string, language = 'en-US', voiceName = 'Amy') {
-    return (this.voice as any).sendTTS(uuid, {
-      text,
-      language,
-      voiceName,
-      level: 0,
-      loop: 1,
-    });
+    const voice = this.voice as Record<string, any>;
+    if (typeof voice.sendTTS === 'function') {
+      return voice.sendTTS(uuid, { text, language, voiceName, level: 0, loop: 1 });
+    }
+    throw new Error('TTS not supported by current Vonage Voice SDK version');
   }
 
   async stopTTS(uuid: string) {
-    return (this.voice as any).stopTTS(uuid);
+    const voice = this.voice as Record<string, any>;
+    if (typeof voice.stopTTS === 'function') {
+      return voice.stopTTS(uuid);
+    }
+    throw new Error('stopTTS not supported by current Vonage Voice SDK version');
   }
 
   async streamAudio(uuid: string, streamUrl: string[]) {
-    return (this.voice as any).sendAudio(uuid, {
-      streamUrl,
-      loop: 1,
-      level: 0,
-    });
+    const voice = this.voice as Record<string, any>;
+    if (typeof voice.sendAudio === 'function') {
+      return voice.sendAudio(uuid, { streamUrl, loop: 1, level: 0 });
+    }
+    throw new Error('Audio streaming not supported by current Vonage Voice SDK version');
   }
 
   async stopStream(uuid: string) {
-    return (this.voice as any).stopAudio(uuid);
+    const voice = this.voice as Record<string, any>;
+    if (typeof voice.stopAudio === 'function') {
+      return voice.stopAudio(uuid);
+    }
+    throw new Error('stopAudio not supported by current Vonage Voice SDK version');
   }
 
   async sendDTMF(uuid: string, digits: string) {
-    return (this.voice as any).sendDTMF(uuid, { digits });
+    const voice = this.voice as Record<string, any>;
+    if (typeof voice.sendDTMF === 'function') {
+      return voice.sendDTMF(uuid, { digits });
+    }
+    throw new Error('DTMF not supported by current Vonage Voice SDK version');
   }
 }
 

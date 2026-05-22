@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert, ScrollView } from 'react-native';
+import { config } from './config';
 
 export default function MessagesScreen() {
   const [to, setTo] = useState('');
@@ -16,7 +17,7 @@ export default function MessagesScreen() {
     setSending(true);
     try {
       const endpoint = channel === 'whatsapp' ? '/api/message/send-whatsapp' : '/api/message/send';
-      const res = await fetch(`http://localhost:3039${endpoint}`, {
+      const res = await fetch(`${config.apiBaseUrl}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ to, text: message }),

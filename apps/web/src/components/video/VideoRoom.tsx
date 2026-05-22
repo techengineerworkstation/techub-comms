@@ -4,6 +4,8 @@ import ParticipantList from './ParticipantList';
 import ChatPanel from './ChatPanel';
 import { useSessionStore } from '@techub/shared';
 
+const API_URL = import.meta.env.VITE_API_URL || '';
+
 interface VideoRoomProps {
   room: string;
   sessionId: string;
@@ -15,12 +17,38 @@ interface VideoRoomProps {
 export default function VideoRoom({ room, sessionId, token, apiKey, onLeave }: VideoRoomProps) {
   const sessionRef = useRef<any>(null);
   const publisherRef = useRef<any>(null);
+  const subscriberRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const [isConnected, setIsConnected] = useState(false);
   const [participants, setParticipants] = useState<any[]>([]);
-  const { isChatOpen, isParticipantsOpen, isRecording, isScreenSharing } = useSessionStore();
+  const { isChatOpen, isParticipantsOpen, isRecording, isScreenSharing, setScreenSharing, setCaptionsId } = useSessionStore();
+  const screenSharingPublisherRef = useRef<any>(null);
+
+  const setSubscriberRef = useCallback((id: string, el: HTMLDivElement | null) => {
+    if (el) {
+      subscriberRefs.current.set(id, el);
+    } else {
+      subscriberRefs.current.delete(id);
+    }
+  }, []);
 
   const handleStreamCreated = useCallback((event: any) => {
-    setParticipants((prev) => [...prev, { stream: event.stream, id: event.stream.connection.connectionId }]);
+    const stream = event.stream;
+    const connectionId = stream.connection.connectionId;
+    setParticipants((prev) => [...prev, { stream, id: connectionId }]);
+
+    // Subscribe to the remote stream after DOM element is available
+    setTimeout(() => {
+      const container = subscriberRefs.current.get(connectionId);
+      if (container && sessionRef.current) {
+        const OT = (window as any).OT;
+        sessionRef.current.subscribe(stream, container, {
+          insertMode: 'replace',
+          width: '100%',
+          height: '100%',
+          style: { buttonDisplayMode: 'off' },
+        });
+      }
+    }, 100);
   }, []);
 
   const handleStreamDestroyed = useCallback((event: any) => {
@@ -43,6 +71,20 @@ export default function VideoRoom({ room, sessionId, token, apiKey, onLeave }: V
         session.on('streamCreated', handleStreamCreated);
         session.on('streamDestroyed', handleStreamDestroyed);
 
+        // Handle chat signals
+        session.on('signal:chat', (event: any) => {
+          if (event.from?.connectionId !== session.connection?.connectionId) {
+            const data = JSON.parse(event.data || '{}');
+            useSessionStore.getState().addChatMessage?.({
+              id: Date.now().toString(),
+              sender: data.sender || 'Participant',
+              text: data.text,
+              timestamp: new Date(),
+              isOwn: false,
+            });
+          }
+        });
+
         session.connect(token, (error: any) => {
           if (error) {
             console.error('Session connection error:', error);
@@ -55,6 +97,7 @@ export default function VideoRoom({ room, sessionId, token, apiKey, onLeave }: V
             width: '100%',
             height: '100%',
             style: { buttonDisplayMode: 'off' },
+            name: 'You',
           });
 
           session.publish(publisher);
@@ -78,7 +121,7 @@ export default function VideoRoom({ room, sessionId, token, apiKey, onLeave }: V
 
   const handleStartRecording = async () => {
     try {
-      await fetch(`/api/video/session/${room}/startArchive`, { method: 'POST' });
+      await fetch(`${API_URL}/api/video/session/${room}/startArchive`, { method: 'POST' });
       useSessionStore.getState().setRecording(true);
     } catch (err) {
       console.error('Failed to start recording:', err);
@@ -87,15 +130,104 @@ export default function VideoRoom({ room, sessionId, token, apiKey, onLeave }: V
 
   const handleStopRecording = async () => {
     try {
-      const res = await fetch(`/api/video/session/${room}/archives`);
+      const res = await fetch(`${API_URL}/api/video/session/${room}/archives`);
       const data = await res.json();
       if (data.archives?.length > 0) {
         const latest = data.archives[0];
-        await fetch(`/api/video/session/${room}/${latest.id}/stopArchive`, { method: 'POST' });
+        await fetch(`${API_URL}/api/video/session/${room}/${latest.id}/stopArchive`, { method: 'POST' });
       }
       useSessionStore.getState().setRecording(false);
     } catch (err) {
       console.error('Failed to stop recording:', err);
+    }
+  };
+
+  const handleToggleScreenShare = async () => {
+    const OT = (window as any).OT;
+    if (!OT || !sessionRef.current || !publisherRef.current) return;
+
+    if (isScreenSharing) {
+      // Stop screen sharing — republish camera
+      if (screenSharingPublisherRef.current) {
+        sessionRef.current.unpublish(screenSharingPublisherRef.current);
+        screenSharingPublisherRef.current.destroy();
+        screenSharingPublisherRef.current = null;
+      }
+      const cameraPublisher = OT.initPublisher('publisher', {
+        insertMode: 'replace',
+        width: '100%',
+        height: '100%',
+        style: { buttonDisplayMode: 'off' },
+        name: 'You',
+      });
+      sessionRef.current.publish(cameraPublisher);
+      publisherRef.current = cameraPublisher;
+      setScreenSharing(false);
+    } else {
+      // Start screen sharing
+      try {
+        const screenPublisher = OT.initPublisher('publisher', {
+          insertMode: 'replace',
+          width: '100%',
+          height: '100%',
+          videoSource: 'screen',
+          publishAudio: true,
+          style: { buttonDisplayMode: 'off' },
+        });
+
+        screenPublisher.on('accessDenied', () => {
+          console.warn('Screen sharing access denied');
+          setScreenSharing(false);
+        });
+
+        screenPublisher.on('destroyed', () => {
+          // Screen share ended by user (e.g., browser stop button)
+          if (screenSharingPublisherRef.current) {
+            screenSharingPublisherRef.current = null;
+            const cameraPublisher = OT.initPublisher('publisher', {
+              insertMode: 'replace',
+              width: '100%',
+              height: '100%',
+              style: { buttonDisplayMode: 'off' },
+              name: 'You',
+            });
+            sessionRef.current?.publish(cameraPublisher);
+            publisherRef.current = cameraPublisher;
+            setScreenSharing(false);
+          }
+        });
+
+        sessionRef.current.unpublish(publisherRef.current);
+        sessionRef.current.publish(screenPublisher);
+        screenSharingPublisherRef.current = screenPublisher;
+        publisherRef.current = screenPublisher;
+        setScreenSharing(true);
+      } catch (err) {
+        console.error('Failed to start screen sharing:', err);
+        setScreenSharing(false);
+      }
+    }
+  };
+
+  const handleToggleCaptions = async () => {
+    const { captionsId } = useSessionStore.getState();
+    if (captionsId) {
+      try {
+        await fetch(`${API_URL}/api/video/session/${room}/${captionsId}/disableCaptions`, { method: 'POST' });
+        setCaptionsId(null);
+      } catch (err) {
+        console.error('Failed to disable captions:', err);
+      }
+    } else {
+      try {
+        const res = await fetch(`${API_URL}/api/video/session/${room}/enableCaptions`, { method: 'POST' });
+        const data = await res.json();
+        if (data.captionsId) {
+          setCaptionsId(data.captionsId);
+        }
+      } catch (err) {
+        console.error('Failed to enable captions:', err);
+      }
     }
   };
 
@@ -116,7 +248,11 @@ export default function VideoRoom({ room, sessionId, token, apiKey, onLeave }: V
             {/* Remote Subscribers */}
             {participants.map((p) => (
               <div key={p.id} className="relative bg-gray-900 rounded-xl overflow-hidden aspect-video">
-                <div id={`subscriber-${p.id}`} className="w-full h-full" />
+                <div
+                  ref={(el) => setSubscriberRef(p.id, el)}
+                  id={`subscriber-${p.id}`}
+                  className="w-full h-full"
+                />
                 <div className="absolute bottom-3 left-3 bg-black/50 text-white text-sm px-2 py-1 rounded">
                   {p.stream?.name || 'Participant'}
                 </div>
@@ -133,7 +269,7 @@ export default function VideoRoom({ room, sessionId, token, apiKey, onLeave }: V
         )}
         {isChatOpen && (
           <div className="w-80 border-l border-beige-100 bg-white">
-            <ChatPanel />
+            <ChatPanel session={sessionRef.current} />
           </div>
         )}
       </div>
@@ -144,6 +280,9 @@ export default function VideoRoom({ room, sessionId, token, apiKey, onLeave }: V
         onLeave={onLeave}
         onStartRecording={handleStartRecording}
         onStopRecording={handleStopRecording}
+        publisherRef={publisherRef}
+        onToggleScreenShare={handleToggleScreenShare}
+        onToggleCaptions={handleToggleCaptions}
       />
     </div>
   );
