@@ -17,7 +17,7 @@ class VideoService {
   constructor() {
     this.credentials = new Auth({
       applicationId: config.vonage.applicationId,
-      privateKey: config.vonage.privateKeyPath,
+      privateKey: config.vonage.privateKey,
     });
     this.video = new Video(this.credentials);
   }
