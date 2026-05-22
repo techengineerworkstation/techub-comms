@@ -12,14 +12,16 @@
     "lint": "turbo lint",
     "dev:web": "turbo dev --filter=web",
     "dev:server": "turbo dev --filter=server",
-    "dev:mobile": "turbo dev --filter=mobile"
+    "dev:mobile": "turbo dev --filter=mobile",
+    "dev:desktop": "turbo dev --filter=desktop"
   },
   "devDependencies": {
     "turbo": "^2.3.0",
     "typescript": "^5.7.0"
   },
   "overrides": {
-    "uuid": "9.0.1"
+    "uuid": "9.0.1",
+    "node-fetch": "2.7.0"
   },
   "packageManager": "npm@10.0.0"
 }

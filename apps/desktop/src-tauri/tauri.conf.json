@@ -1,0 +1,39 @@
+{
+  "productName": "Techub Comms",
+  "version": "0.1.0",
+  "identifier": "com.techub.comms",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:3038",
+    "beforeDevCommand": "npm run dev",
+    "beforeBuildCommand": "npm run build"
+  },
+  "app": {
+    "title": "Techub Comms",
+    "windows": [
+      {
+        "title": "Techub Comms",
+        "width": 1280,
+        "height": 800,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": true,
+        "transparent": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

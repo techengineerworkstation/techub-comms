@@ -1,0 +1,42 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-beige-50: #fdf8f0;
+  --color-beige-100: #ecdcb8;
+  --color-beige-200: #d9c49a;
+  --color-beige-300: #c5ab7b;
+  --color-beige-400: #b1935d;
+  --color-beige-500: #9d7a3e;
+  --color-teal-50: #e6f7f7;
+  --color-teal-100: #b3e8e8;
+  --color-teal-200: #80d9d9;
+  --color-teal-300: #4dcaca;
+  --color-teal-400: #1abbbb;
+  --color-teal-500: #009999;
+  --color-teal-600: #007a7a;
+  --color-teal-700: #005c5c;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background-color: var(--color-beige-50);
+  color: #1a1a1a;
+}
+
+.btn-primary {
+  @apply bg-teal-500 hover:bg-teal-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200;
+}
+
+.btn-secondary {
+  @apply bg-beige-100 hover:bg-beige-200 text-teal-700 font-medium py-2 px-4 rounded-lg transition-colors duration-200;
+}
+
+.btn-icon {
+  @apply w-10 h-10 rounded-full flex items-center justify-center transition-colors duration-200;
+}
+
+.card {
+  @apply bg-white rounded-xl shadow-sm border border-beige-100;
+}
