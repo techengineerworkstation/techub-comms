@@ -8,7 +8,7 @@ messageRouter.post('/send', async (req: Request, res: Response) => {
   try {
     const { to, from, text } = req.body;
     const result = await messageService.sendSMS(to, from || process.env.VONAGE_NUMBER!, text);
-    res.json({ messageId: result.messageUuid, status: 'sent' });
+    res.json({ messageId: result.messageUUID, status: 'sent' });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -19,7 +19,7 @@ messageRouter.post('/send-mms', async (req: Request, res: Response) => {
   try {
     const { to, from, text, mediaUrl } = req.body;
     const result = await messageService.sendMMS(to, from || process.env.VONAGE_NUMBER!, text, mediaUrl);
-    res.json({ messageId: result.messageUuid, status: 'sent' });
+    res.json({ messageId: result.messageUUID, status: 'sent' });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }
@@ -30,7 +30,7 @@ messageRouter.post('/send-whatsapp', async (req: Request, res: Response) => {
   try {
     const { to, from, text } = req.body;
     const result = await messageService.sendWhatsApp(to, from || process.env.VONAGE_NUMBER!, text);
-    res.json({ messageId: result.messageUuid, status: 'sent' });
+    res.json({ messageId: result.messageUUID, status: 'sent' });
   } catch (error: any) {
     res.status(500).json({ error: error.message });
   }

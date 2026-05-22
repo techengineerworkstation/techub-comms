@@ -17,33 +17,32 @@ class MessageService {
 
   async sendSMS(to: string, from: string, text: string) {
     return this.messages.send({
-      to: [{ type: 'phone', number: to }],
-      from: { type: 'phone', number: from },
-      channel: 'sms' as any,
-      message_type: 'text' as any,
+      to,
+      from,
+      channel: 'sms',
+      messageType: 'text',
       text,
-    });
+    } as any);
   }
 
   async sendMMS(to: string, from: string, text: string, mediaUrl: string[]) {
     return this.messages.send({
-      to: [{ type: 'phone', number: to }],
-      from: { type: 'phone', number: from },
-      channel: 'mms' as any,
-      message_type: 'image' as any,
+      to,
+      from,
+      channel: 'mms',
+      messageType: 'image',
       image: { url: mediaUrl[0] },
-      text,
-    });
+    } as any);
   }
 
   async sendWhatsApp(to: string, from: string, text: string) {
     return this.messages.send({
-      to: [{ type: 'phone', number: to }],
-      from: { type: 'phone', number: from },
-      channel: 'whatsapp' as any,
-      message_type: 'text' as any,
+      to,
+      from,
+      channel: 'whatsapp',
+      messageType: 'text',
       text,
-    });
+    } as any);
   }
 
   async send(options: SendMessageOptions) {

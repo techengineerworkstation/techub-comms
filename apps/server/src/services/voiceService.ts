@@ -10,7 +10,7 @@ class VoiceService {
   constructor() {
     this.credentials = new Auth({
       applicationId: config.vonage.applicationId,
-      privateKey: config.vonage.privateKeyPath,
+      privateKey: config.vonage.privateKey,
     });
     this.voice = new Voice(this.credentials);
   }
@@ -43,11 +43,11 @@ class VoiceService {
   }
 
   async modifyCall(uuid: string, action: string) {
-    return this.voice.modifyCall(uuid, { action } as any);
+    return (this.voice as any).updateCall(uuid, { action });
   }
 
   async playTTS(uuid: string, text: string, language = 'en-US', voiceName = 'Amy') {
-    return this.voice.sendTTS(uuid, {
+    return (this.voice as any).sendTTS(uuid, {
       text,
       language,
       voiceName,
@@ -57,11 +57,11 @@ class VoiceService {
   }
 
   async stopTTS(uuid: string) {
-    return this.voice.stopTTS(uuid);
+    return (this.voice as any).stopTTS(uuid);
   }
 
   async streamAudio(uuid: string, streamUrl: string[]) {
-    return this.voice.sendAudio(uuid, {
+    return (this.voice as any).sendAudio(uuid, {
       streamUrl,
       loop: 1,
       level: 0,
@@ -69,11 +69,11 @@ class VoiceService {
   }
 
   async stopStream(uuid: string) {
-    return this.voice.stopAudio(uuid);
+    return (this.voice as any).stopAudio(uuid);
   }
 
   async sendDTMF(uuid: string, digits: string) {
-    return this.voice.sendDTMF(uuid, { digits });
+    return (this.voice as any).sendDTMF(uuid, { digits });
   }
 }
 
