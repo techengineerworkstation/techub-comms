@@ -13,14 +13,22 @@
     "dev:web": "turbo dev --filter=web",
     "dev:server": "turbo dev --filter=server",
     "dev:mobile": "turbo dev --filter=mobile",
-    "dev:desktop": "turbo dev --filter=desktop"
+    "dev:desktop": "turbo dev --filter=desktop",
+    "build:web": "turbo build --filter=web",
+    "build:server": "turbo build --filter=server",
+    "build:desktop": "turbo build --filter=desktop",
+    "build:desktop:linux": "npm --workspace desktop run tauri:build:linux",
+    "build:desktop:mac": "npm --workspace desktop run tauri:build:mac",
+    "build:desktop:win": "npm --workspace desktop run tauri:build:win",
+    "build:mobile:android": "npm --workspace mobile run android",
+    "build:mobile:ios": "npm --workspace mobile run ios"
   },
   "devDependencies": {
     "turbo": "^2.3.0",
     "typescript": "^5.7.0"
   },
   "overrides": {
-    "uuid": "9.0.1",
+    "uuid": "8.3.2",
     "node-fetch": "2.7.0"
   },
   "packageManager": "npm@10.0.0"

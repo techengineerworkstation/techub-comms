@@ -236,3 +236,97 @@ curl -X POST https://api.thbtechub.sbs/monitoring-event \
 |----------|-------|
 | `VITE_API_URL` | `https://api.thbtechub.sbs` |
 | `VITE_VONAGE_API_KEY` | `ff261ddc` |
+
+---
+
+## Step 7: Build Desktop App (Tauri 2)
+
+The desktop app uses **Tauri 2** (Rust backend + React frontend) and builds natively for each platform. You must build **on** the target platform or use cross-compilation.
+
+### Prerequisites
+
+- Rust toolchain: `curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh`
+- System dependencies (Linux): `sudo apt install libwebkit2gtk-4.1-dev build-essential libssl-dev libgtk-3-dev libayatana-appindicator3-dev librsvg2-dev`
+
+### Build Commands
+
+```bash
+cd /home/hptechworkpc/Apps/techub-comms
+
+# Linux AppImage
+npm run build:desktop:linux
+
+# macOS DMG (Apple Silicon)
+npm run build:desktop:mac
+
+# Windows EXE (must be built on Windows or via CI)
+npm run build:desktop:win
+```
+
+Output binaries are in `apps/desktop/src-tauri/target/release/bundle/`:
+- Linux: `*.AppImage`
+- macOS: `*.dmg`
+- Windows: `*.msi` / `*.exe`
+
+### CI/CD with GitHub Actions
+
+For cross-platform builds, set up GitHub Actions with matrix builds. The `tauri-apps/tauri-action` GitHub Action can build all platforms automatically on push/release.
+
+---
+
+## Step 8: Build Mobile App (Expo/EAS)
+
+The mobile app uses **Expo SDK 52** with Expo Router. Builds are done via **EAS Build** (Expo Application Services) in the cloud.
+
+### Prerequisites
+
+```bash
+# Install EAS CLI
+npm install -g eas-cli
+
+# Login to Expo
+eas login
+
+# Configure project
+cd apps/mobile
+eas build:configure
+```
+
+### Build Commands
+
+```bash
+cd apps/mobile
+
+# Android APK (for testing/sideloading)
+eas build --platform android --profile preview
+
+# Android AAB (for Google Play Store)
+eas build --platform android --profile production
+
+# iOS IPA (requires Apple Developer account)
+eas build --platform ios --profile production
+```
+
+### Submit to Stores
+
+```bash
+# Google Play Store
+eas submit --platform android
+
+# Apple App Store
+eas submit --platform ios
+```
+
+### Environment Variables for Mobile
+
+The mobile app reads the API URL from `apps/mobile/app/config.ts`:
+- Default: `https://api.thbtechub.sbs`
+- Override: Set `EXPO_PUBLIC_API_URL` environment variable
+
+---
+
+## Verify Deployment
+
+```bash
+# Check server health
+curl https://api.thbtechub.sbs/health
