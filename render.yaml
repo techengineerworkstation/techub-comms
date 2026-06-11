@@ -1,0 +1,43 @@
+services:
+  - type: web
+    name: techub-comms
+    runtime: rust
+    plan: free
+    buildCommand: |
+      rustup target add wasm32-unknown-unknown
+      cargo install trunk wasm-bindgen-cli
+      cd apps/web_leptos && trunk build --release && cd ../..
+      cargo build --release --package backend_api
+      mkdir -p static && cp -r apps/web_leptos/dist/* static/ && cp apps/web_leptos/public/* static/
+    startCommand: ./target/release/backend_api
+    envVars:
+      - key: RUST_LOG
+        value: info
+      - key: PORT
+        value: 3039
+      - key: BASE_URL
+        value: https://api.thbtechub.sbs
+      - key: FRONTEND_URL
+        value: https://thbtechub.sbs
+      - key: VONAGE_API_KEY
+        sync: false
+      - key: VONAGE_API_SECRET
+        sync: false
+      - key: VONAGE_APPLICATION_ID
+        sync: false
+      - key: VONAGE_PRIVATE_KEY_B64
+        sync: false
+      - key: VONAGE_NUMBER
+        sync: false
+    healthCheckPath: /health
+    autoDeploy: true
+    headers:
+      - path: /*
+        name: X-Content-Type-Options
+        value: nosniff
+      - path: /*
+        name: X-Frame-Options
+        value: DENY
+      - path: /*
+        name: Strict-Transport-Security
+        value: max-age=31536000; includeSubDomains; preload

@@ -1,116 +1,258 @@
-# Techub Comms
+# Techub Comms — Enterprise Communications Platform
 
-A Vonage-powered, full-scale voice, text, and video communication platform with web, desktop, and mobile clients.
+A multi-versatile communications platform built with **Rust** and **Leptos** (WASM), featuring voice calls, text messaging (SMS/WhatsApp/MMS), video conferencing, and recording capabilities. Powered by the Vonage Communications API.
 
 ## Architecture
 
 ```
-techub-comms/           Turborepo monorepo root
-  apps/
-    web/                React + Vite web app (deployed to Vercel)
-    server/             Express API server (deployed to Railway)
-    desktop/            Tauri 2 + React desktop app (AppImage/DMG/EXE)
-    mobile/             Expo + React Native mobile app (APK/AAB/IPA)
-  packages/
-    shared/             Shared types, stores (Zustand), API client, constants
+techub-comms/
+├── apps/
+│   ├── backend_api/        # Rust backend (Actix-web)
+│   ├── web_leptos/         # Leptos WASM frontend
+│   ├── desktop/            # Tauri desktop app
+│   ├── mobile/             # React Native/Expo mobile app
+│   └── server/             # Node.js Express server (legacy)
+├── packages/
+│   ├── shared_core/        # Shared Rust types & API client
+│   └── shared/             # Shared TypeScript types & stores
+├── Dockerfile              # Multi-stage Docker build
+├── render.yaml             # Render deployment config
+└── .github/workflows/      # CI/CD pipelines
 ```
-
-## Features
-
-- **Video Calls** — Vonage Video API (OpenTok) with recording, screen sharing, captions, and in-session chat
-- **Voice Calls** — Vonage Voice API with outbound calls, IVR menus, TTS, DTMF, conferencing, and call recording
-- **Messaging** — SMS, MMS, and WhatsApp via Vonage Messages API
-- **Recordings** — List, play back, and download video archives
 
 ## Tech Stack
 
 | Layer | Technology |
 |-------|-----------|
-| Web frontend | React 18, Vite, Tailwind CSS, Zustand, TanStack Query |
-| Desktop app | Tauri 2 (Rust), React, Vite |
-| Mobile app | Expo SDK 52, React Native, Expo Router |
-| Server | Express, Vonage SDK (Auth, Video, Voice, Messages), Zod |
-| Shared | Zustand stores, TypeScript types, API client |
-| Deploy (web) | Vercel |
-| Deploy (server) | Railway |
-
-## Environment Variables
-
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `VONAGE_API_KEY` | Vonage API key | Yes |
-| `VONAGE_API_SECRET` | Vonage API secret | Yes |
-| `VONAGE_APPLICATION_ID` | Vonage Application ID | Yes |
-| `VONAGE_PRIVATE_KEY_PATH` | Path to private key file | Yes |
-| `VONAGE_NUMBER` | Vonage phone number | For voice/SMS |
-| `PORT` | Server port (default: 3039) | No |
-| `BASE_URL` | Server public URL | Yes |
-| `FRONTEND_URL` | Web app URL (for CORS) | Yes |
-| `VITE_API_URL` | API URL for web client | Yes |
-| `VITE_VONAGE_API_KEY` | Vonage key for web client | Yes |
+| **Frontend (Web)** | Leptos 0.7 (Rust → WASM) |
+| **Backend** | Actix-web 4 (Rust) |
+| **Desktop** | Tauri 2 (Rust + WebView) |
+| **Mobile** | React Native / Expo |
+| **Theme** | Metallic Beige Tanned Turquoise |
+| **API** | Vonage Video, Voice, Messages |
+| **Deployment** | Docker, Render, GitHub Actions |
 
 ## Quick Start
 
+### Prerequisites
+
 ```bash
-# Install dependencies
-npm install
+# Rust toolchain
+curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
+rustup target add wasm32-unknown-unknown
 
-# Start all apps in development
-npm run dev
+# WASM tools
+cargo install trunk wasm-bindgen-cli
 
-# Or start individually
-npm run dev:web        # http://localhost:3038
-npm run dev:server     # http://localhost:3039
-npm run dev:mobile     # Expo dev server
-npm run dev:desktop    # Tauri dev
+# Tauri (for desktop builds)
+cargo install tauri-cli
 ```
 
-## Building
+### Development
 
-### Web
 ```bash
-npm run build:web
+# Clone
+git clone https://github.com/YOUR_USERNAME/techub-comms.git
+cd techub-comms
+
+# Backend API
+cd apps/backend_api
+cp ../../.env.example .env   # Configure Vonage credentials
+cargo run
+
+# Frontend (in another terminal)
+cd apps/web_leptos
+trunk serve
+
+# Open http://localhost:3038
 ```
 
-### Server
+### Environment Variables
+
+Create `.env` in `apps/backend_api/`:
+
+```env
+VONAGE_API_KEY=your_api_key
+VONAGE_API_SECRET=your_api_secret
+VONAGE_APPLICATION_ID=your_app_id
+VONAGE_PRIVATE_KEY_B64=base64_encoded_private_key
+VONAGE_NUMBER=+1234567890
+PORT=3039
+BASE_URL=https://api.thbtechub.sbs
+FRONTEND_URL=https://thbtechub.sbs
+RUST_LOG=info
+```
+
+---
+
+## Build Targets
+
+### Web (WASM)
+
 ```bash
-npm run build:server
+cd apps/web_leptos
+trunk build --release
+# Output: apps/web_leptos/dist/
+```
+
+### Backend Binary
+
+```bash
+cargo build --release --package backend_api
+# Output: target/release/backend_api
+```
+
+### Docker
+
+```bash
+docker build -t techub-comms .
+docker run -p 3039:3039 \
+  -e VONAGE_API_KEY=key \
+  -e VONAGE_API_SECRET=secret \
+  -e VONAGE_APPLICATION_ID=app_id \
+  techub-comms
 ```
 
 ### Desktop (Tauri)
+
+#### macOS (.dmg / .app)
+
 ```bash
-# Linux AppImage
-npm run build:desktop:linux
-
-# macOS DMG (Intel + Apple Silicon)
-npm run build:desktop:mac
-
-# Windows EXE
-npm run build:desktop:win
+cd apps/desktop
+npm install
+cargo tauri build --target universal-apple-darwin
+# Output: src-tauri/target/universal-apple-darwin/release/bundle/dmg/
 ```
 
-### Mobile (Expo/EAS)
+#### Linux (.AppImage / .deb)
+
+```bash
+cd apps/desktop
+npm install
+cargo tauri build
+# Output: src-tauri/target/release/bundle/appimage/
+# Output: src-tauri/target/release/bundle/deb/
+```
+
+#### Windows (.exe / .msi)
+
+```bash
+cd apps/desktop
+npm install
+cargo tauri build --target x86_64-pc-windows-msvc
+# Output: src-tauri/target/x86_64-pc-windows-msvc/release/bundle/msi/
+```
+
+### Mobile (React Native / Expo)
+
+#### Android (.apk / .aab)
+
 ```bash
 cd apps/mobile
-
-# Android APK (preview)
-eas build --platform android --profile preview
-
-# Android AAB (production)
-eas build --platform android --profile production
-
-# iOS IPA
-eas build --platform ios --profile production
+npm install
+npx expo prebuild
+cd android
+./gradlew assembleRelease    # .apk
+./gradlew bundleRelease      # .aab
+# Output: app/build/outputs/
 ```
+
+#### iOS (.ipa)
+
+```bash
+cd apps/mobile
+npm install
+npx expo prebuild
+cd ios
+xcodebuild -workspace TechubComms.xcworkspace \
+  -scheme TechubComms \
+  -configuration Release \
+  -archivePath build/TechubComms.xcarchive archive
+# Export IPA via Xcode or xcodebuild -exportArchive
+```
+
+---
 
 ## Deployment
 
-See [DEPLOYMENT.md](./DEPLOYMENT.md) for detailed deployment instructions.
+### Render (Recommended)
 
-- **Web** — Deployed on Vercel at `thbtechub.sbs`
-- **Server** — Deployed on Railway at `api.thbtechub.sbs`
-- **Domain** — `thbtechub.sbs`
+1. Push to GitHub
+2. Connect repository to [Render](https://render.com)
+3. Render reads `render.yaml` automatically
+4. Set environment variables in Render dashboard:
+   - `VONAGE_API_KEY`
+   - `VONAGE_API_SECRET`
+   - `VONAGE_APPLICATION_ID`
+   - `VONAGE_PRIVATE_KEY_B64`
+   - `VONAGE_NUMBER`
+
+### Custom Domain (thbtechub.sbs)
+
+1. In Render dashboard → Settings → Custom Domains
+2. Add `thbtechub.sbs` and `api.thbtechub.sbs`
+3. In Hostinger DNS settings, add:
+   - `A` record → Render's IP
+   - `CNAME` record for `api` → your-app.onrender.com
+
+### GitHub Container Registry
+
+Docker images are automatically pushed on merge to `main`:
+```bash
+ghcr.io/YOUR_USERNAME/techub-comms:latest
+ghcr.io/YOUR_USERNAME/techub-comms:<commit-sha>
+```
+
+---
+
+## Security
+
+- **Content Security Policy** (CSP) headers on all responses
+- **Rate limiting** (60 req/min per IP)
+- **Input validation** (phone, room, DTMF, UUID, text sanitization)
+- **HSTS** with preload
+- **X-Frame-Options**: DENY
+- **X-Content-Type-Options**: nosniff
+- **XSS Protection**: 1; mode=block
+- **Referrer Policy**: strict-origin-when-cross-origin
+- **Permissions Policy**: camera=(), microphone=(), geolocation=()
+- **Webhook verification tokens** for Vonage callbacks
+- **CORS** restricted to configured origins
+- **Non-root Docker user**
+
+---
+
+## Theme
+
+The app uses a **Metallic Beige Tanned Turquoise** theme:
+
+| Color | Hex | Usage |
+|-------|-----|-------|
+| Beige 50 | `#fdf8f0` | Background |
+| Beige 100 | `#f5ead6` | Cards, borders |
+| Beige 500 | `#c4a06a` | Metallic accents |
+| Teal 500 | `#009999` | Primary actions |
+| Teal 600 | `#007a7a` | Hover states |
+| Teal 700 | `#005c5c` | Text emphasis |
+
+### Glow Effects
+
+- **glow-card**: Cards with teal glow on hover + metallic shine sweep
+- **glow-tab**: Navigation tabs with hued gradient glow and active indicator
+- **glow-sidebar**: Sidebar with turquoise edge glow on hover
+- **glow-header**: Header with bottom glow line on hover
+
+---
+
+## CI/CD
+
+GitHub Actions workflows:
+
+- **ci.yml**: Check → Build → Docker test on every push/PR
+- **deploy.yml**: Auto-deploy to Render + push Docker image to GHCR on main
+
+---
 
 ## License
 
-MIT
+MIT License — see [LICENSE](LICENSE)

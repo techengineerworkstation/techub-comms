@@ -1,0 +1,14 @@
+[package]
+name = "shared_core"
+version = "0.1.0"
+edition = "2021"
+description = "Shared Rust core for Techub Comms — types, API client, and state management"
+
+[dependencies]
+serde = { workspace = true }
+serde_json = { workspace = true }
+reqwest = { workspace = true }
+thiserror = { workspace = true }
+log = { workspace = true }
+chrono = { workspace = true }
+base64 = "0.22"

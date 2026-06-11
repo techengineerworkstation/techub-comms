@@ -1,0 +1,97 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  check-backend:
+    name: Check Backend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Check backend
+        run: cargo check --package backend_api
+      - name: Check shared_core
+        run: cargo check --package shared_core
+
+  check-frontend:
+    name: Check WASM Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - name: Install trunk
+        run: cargo install trunk
+      - name: Install wasm-bindgen-cli
+        run: cargo install wasm-bindgen-cli
+      - name: Check web_leptos
+        run: cargo check --package web_leptos --target wasm32-unknown-unknown
+
+  build-release:
+    name: Build Release
+    runs-on: ubuntu-latest
+    needs: check-backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Build release backend
+        run: cargo build --release --package backend_api
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: backend-api-linux
+          path: target/release/backend_api
+
+  build-wasm:
+    name: Build WASM Frontend
+    runs-on: ubuntu-latest
+    needs: check-frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: wasm32-unknown-unknown
+      - uses: Swatinem/rust-cache@v2
+      - name: Install trunk
+        run: cargo install trunk
+      - name: Install wasm-bindgen-cli
+        run: cargo install wasm-bindgen-cli
+      - name: Build WASM
+        run: cd apps/web_leptos && trunk build --release
+      - name: Upload WASM dist
+        uses: actions/upload-artifact@v4
+        with:
+          name: wasm-frontend
+          path: apps/web_leptos/dist/
+
+  docker-build:
+    name: Docker Build & Test
+    runs-on: ubuntu-latest
+    needs: [check-backend, check-frontend]
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Docker image
+        run: docker build -t techub-comms:${{ github.sha }} .
+      - name: Test health endpoint
+        run: |
+          docker run -d --name test -p 3039:3039 \
+            -e RUST_LOG=info \
+            -e VONAGE_API_KEY=test \
+            -e VONAGE_API_SECRET=test \
+            -e VONAGE_APPLICATION_ID=test \
+            techub-comms:${{ github.sha }}
+          sleep 5
+          curl -f http://localhost:3039/health || (docker logs test && exit 1)
+          docker stop test
