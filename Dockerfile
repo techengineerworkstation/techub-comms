@@ -16,7 +16,7 @@ COPY . .
 
 # Build WASM frontend
 WORKDIR /app/apps/web_leptos
-RUN trunk build --release
+RUN trunk build --release && cp public/* dist/
 
 # Build Rust backend
 WORKDIR /app
