@@ -1,0 +1,33 @@
+# Build artifacts
+target/
+node_modules/
+dist/
+
+# IDE
+.vscode/
+.idea/
+
+# Git
+.git/
+.gitignore
+
+# Environment files
+.env
+.env.local
+.env.render
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Documentation
+*.md
+!README.md
+
+# Other
+repomix-output.xml
+railway.json
+vercel.json
+turbo.json
+tsconfig.json
+package-lock.json
