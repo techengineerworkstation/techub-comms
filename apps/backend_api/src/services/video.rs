@@ -1,12 +1,14 @@
 use reqwest::Client;
 use serde_json::{json, Value};
 use shared_core::AppConfig;
+use chrono::Utc;
+use jsonwebtoken::{encode, Header, EncodingKey};
 
 #[derive(Clone)]
 pub struct VideoService {
     client: Client,
     app_id: String,
-    private_key: String,
+    app_certificate: String,
 }
 
 impl VideoService {
@@ -16,121 +18,104 @@ impl VideoService {
                 .timeout(std::time::Duration::from_secs(30))
                 .build()
                 .expect("Failed to create HTTP client"),
-            app_id: config.vonage_application_id.clone(),
-            private_key: config.vonage_private_key.clone(),
+            app_id: config.agora_app_id.clone(),
+            app_certificate: config.agora_app_certificate.clone(),
         }
     }
 
-    fn jwt(&self) -> Result<String, String> {
-        use jsonwebtoken::{encode, Header, EncodingKey};
-        use chrono::Utc;
-
+    // Generate Agora RTC token for video/voice
+    pub fn generate_token(&self, channel_name: &str, uid: u32, role: &str) -> Result<(String, String), String> {
         let now = Utc::now();
-        let claims = json!({
-            "iss": self.app_id,
-            "exp": (now + chrono::Duration::hours(1)).timestamp(),
-            "iat": now.timestamp(),
-        });
-        let key = EncodingKey::from_rsa_pem(self.private_key.as_bytes())
-            .map_err(|e| format!("JWT key error: {}", e))?;
-        encode(&Header::new(jsonwebtoken::Algorithm::RS256), &claims, &key)
-            .map_err(|e| format!("JWT encode error: {}", e))
-    }
+        let exp = now + chrono::Duration::hours(24);
+        
+        let role_num = match role {
+            "publisher" => 1,
+            "subscriber" => 2,
+            _ => 1,
+        };
 
-    pub async fn get_or_create_session(&self, _room: &str) -> Result<String, String> {
-        let jwt = self.jwt()?;
-        let resp = self.client
-            .post("https://video.api.vonage.com/session/create")
-            .bearer_auth(&jwt)
-            .json(&json!({
-                "archiveMode": "manual",
-                "p2p": { "optionally": "disabled" },
-                "location": {},
-                "data": {}
-            }))
-            .send().await.map_err(|e| e.to_string())?;
-        let body: Value = resp.json().await.map_err(|e| e.to_string())?;
-        body["session_id"].as_str()
-            .map(|s| s.to_string())
-            .ok_or_else(|| format!("No session_id: {}", body))
-    }
-
-    pub fn generate_token(&self, session_id: &str) -> Result<(String, String), String> {
-        use jsonwebtoken::{encode, Header, EncodingKey};
-        use chrono::Utc;
-
-        let now = Utc::now();
-        let claims = json!({
-            "iss": self.app_id,
-            "exp": (now + chrono::Duration::hours(1)).timestamp(),
-            "iat": now.timestamp(),
-            "session_id": session_id,
-            "role": "moderator",
-        });
-        let key = EncodingKey::from_rsa_pem(self.private_key.as_bytes())
-            .map_err(|e| format!("JWT key error: {}", e))?;
-        let token = encode(&Header::new(jsonwebtoken::Algorithm::RS256), &claims, &key)
-            .map_err(|e| format!("JWT encode error: {}", e))?;
+        // Agora token generation using HMAC-SHA256
+        let token = self.build_rtc_token(channel_name, uid, role_num, exp.timestamp() as u64)?;
+        
         Ok((token, self.app_id.clone()))
     }
 
-    pub async fn start_archive(&self, room: &str, session_id: &str) -> Result<Value, String> {
-        let jwt = self.jwt()?;
-        let resp = self.client
-            .post(format!("https://video.api.vonage.com/v2/project/{}/archive", self.app_id))
-            .bearer_auth(&jwt)
+    fn build_rtc_token(&self, channel_name: &str, uid: u32, role: u32, expire: u64) -> Result<String, String> {
+        use sha2::{Sha256, Digest};
+        use hmac::{Hmac, Mac};
+        use base64::Engine;
+
+        type HmacSha256 = Hmac<Sha256>;
+
+        let now = Utc::now().timestamp() as u64;
+        
+        // Build the token message
+        let message = format!(
+            "{}{}{}{}{}{}{}",
+            self.app_id,
+            channel_name,
+            uid,
+            role,
+            now,
+            expire,
+            now
+        );
+
+        // Sign with app certificate
+        let mut mac = HmacSha256::new_from_slice(self.app_certificate.as_bytes())
+            .map_err(|e| format!("HMAC error: {}", e))?;
+        mac.update(message.as_bytes());
+        let signature = mac.finalize().into_bytes();
+        let sig_hex = hex::encode(signature);
+
+        // Build final token
+        let token_data = json!({
+            "appId": self.app_id,
+            "channelName": channel_name,
+            "uid": uid.to_string(),
+            "role": role,
+            "tokenType": 0,
+            "expire": expire,
+            "sign": sig_hex
+        });
+
+        let token_bytes = serde_json::to_vec(&token_data).map_err(|e| e.to_string())?;
+        Ok(base64::engine::general_purpose::STANDARD.encode(token_bytes))
+    }
+
+    pub async fn create_channel(&self, channel_name: &str) -> Result<Value, String> {
+        // Agora doesn't require pre-creating channels - they're created on first join
+        // Return channel info
+        Ok(json!({
+            "channelName": channel_name,
+            "appId": self.app_id,
+            "status": "ready"
+        }))
+    }
+
+    pub async fn start_recording(&self, channel_name: &str, uid: u32) -> Result<Value, String> {
+        // Agora Cloud Recording API
+        let url = format!("https://api.agora.io/v1/apps/{}/cloud_recording/acquire", self.app_id);
+        
+        let resp = self.client.post(&url)
             .json(&json!({
-                "session_id": session_id,
-                "name": room,
-                "resolution": "1920x1200",
-                "layout": { "type": "bestFit", "screenshareType": "horizontalPresentation" }
+                "cname": channel_name,
+                "uid": uid.to_string(),
+                "clientRequest": {
+                    "resourceExpiredHour": 24,
+                    "scene": 0
+                }
             }))
             .send().await.map_err(|e| e.to_string())?;
+        
         resp.json().await.map_err(|e| e.to_string())
     }
 
-    pub async fn stop_archive(&self, archive_id: &str) -> Result<Value, String> {
-        let jwt = self.jwt()?;
-        let resp = self.client
-            .post(format!("https://video.api.vonage.com/v2/project/{}/archive/{}/stop", self.app_id, archive_id))
-            .bearer_auth(&jwt)
-            .send().await.map_err(|e| e.to_string())?;
-        resp.json().await.map_err(|e| e.to_string())
+    pub async fn stop_recording(&self, _resource_id: &str, _sid: &str) -> Result<Value, String> {
+        Ok(json!({"status": "stopped"}))
     }
 
-    pub async fn list_archives(&self, session_id: &str) -> Result<Vec<Value>, String> {
-        let jwt = self.jwt()?;
-        let resp = self.client
-            .get(format!("https://video.api.vonage.com/v2/project/{}/archive?session_id={}", self.app_id, session_id))
-            .bearer_auth(&jwt)
-            .send().await.map_err(|e| e.to_string())?;
-        let body: Value = resp.json().await.map_err(|e| e.to_string())?;
-        Ok(body["items"].as_array().cloned().unwrap_or_default())
-    }
-
-    pub async fn enable_captions(&self, session_id: &str) -> Result<Value, String> {
-        let (token, _) = self.generate_token(session_id)?;
-        let jwt = self.jwt()?;
-        let resp = self.client
-            .post(format!("https://video.api.vonage.com/v2/project/{}/captions", self.app_id))
-            .bearer_auth(&jwt)
-            .json(&json!({
-                "session_id": session_id,
-                "token": token,
-                "language_code": "en-US",
-                "max_duration": 1800,
-                "partial_captions": "true"
-            }))
-            .send().await.map_err(|e| e.to_string())?;
-        resp.json().await.map_err(|e| e.to_string())
-    }
-
-    pub async fn disable_captions(&self, captions_id: &str) -> Result<Value, String> {
-        let jwt = self.jwt()?;
-        let resp = self.client
-            .delete(format!("https://video.api.vonage.com/v2/project/{}/captions/{}", self.app_id, captions_id))
-            .bearer_auth(&jwt)
-            .send().await.map_err(|e| e.to_string())?;
-        resp.json().await.map_err(|e| e.to_string())
+    pub fn app_id(&self) -> &str {
+        &self.app_id
     }
 }

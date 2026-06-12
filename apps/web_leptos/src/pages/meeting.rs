@@ -8,7 +8,7 @@ use crate::components::video_room::VideoRoom;
 pub fn MeetingRoom() -> impl IntoView {
     let params = use_params_map();
     let room = move || params.with(|p| p.get("room").cloned().unwrap_or_default());
-    let (session, set_session) = create_signal(None::<api::VideoSessionResp>);
+    let (token_data, set_token_data) = create_signal(None::<api::VideoTokenResp>);
     let (loading, set_loading) = create_signal(true);
     let (error, set_error) = create_signal(None::<String>);
 
@@ -16,8 +16,8 @@ pub fn MeetingRoom() -> impl IntoView {
     spawn_local({
         let r = room_val.clone();
         async move {
-            match api::get_session(&r).await {
-                Ok(d) => set_session.set(Some(d)),
+            match api::get_video_token(&r, 0).await {
+                Ok(d) => set_token_data.set(Some(d)),
                 Err(e) => set_error.set(Some(e)),
             }
             set_loading.set(false);
@@ -36,7 +36,7 @@ pub fn MeetingRoom() -> impl IntoView {
                             <span>"\u{1F3A5}"</span>
                             {room()}
                         </h2>
-                        <p class="text-xs text-gray-500">"Meeting Room"</p>
+                        <p class="text-xs text-gray-500">"Agora Video Channel"</p>
                     </div>
                 </div>
                 <div class="flex items-center gap-2">
@@ -54,13 +54,13 @@ pub fn MeetingRoom() -> impl IntoView {
                                         style="background: linear-gradient(135deg, #009999, #005c5c)">
                                         <span class="text-white text-2xl animate-spin-slow">"\u{1F3A5}"</span>
                                     </div>
-                                    <p class="text-gray-600 font-medium">"Joining meeting..."</p>
-                                    <p class="text-sm text-gray-400 mt-1">"Setting up your connection"</p>
+                                    <p class="text-gray-600 font-medium">"Joining channel..."</p>
+                                    <p class="text-sm text-gray-400 mt-1">"Connecting to Agora"</p>
                                 </div>
                             </div>
                         }.into_view()
                     } else if error.get().is_some() {
-                        let err_msg = error.get().unwrap_or_else(|| "Failed to join meeting".into());
+                        let err_msg = error.get().unwrap_or_else(|| "Failed to join channel".into());
                         view! {
                             <div class="flex items-center justify-center h-full">
                                 <div class="glow-card p-8 text-center max-w-md animate-scale-in">
@@ -74,14 +74,14 @@ pub fn MeetingRoom() -> impl IntoView {
                             </div>
                         }.into_view()
                     } else {
-                        match session.get() {
-                            Some(sd) => {
+                        match token_data.get() {
+                            Some(td) => {
                                 view! {
                                     <VideoRoom
-                                        room=room()
-                                        session_id=sd.session_id
-                                        token=sd.token
-                                        api_key=sd.api_key
+                                        channel=td.channel
+                                        token=td.token
+                                        app_id=td.app_id
+                                        uid=td.uid
                                         on_leave=|| {}
                                     />
                                 }.into_view()

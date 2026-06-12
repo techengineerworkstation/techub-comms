@@ -2,11 +2,16 @@ use std::env;
 
 #[derive(Debug, Clone)]
 pub struct AppConfig {
-    pub vonage_api_key: String,
-    pub vonage_api_secret: String,
-    pub vonage_application_id: String,
-    pub vonage_private_key: String,
-    pub vonage_number: String,
+    // Agora credentials
+    pub agora_app_id: String,
+    pub agora_app_certificate: String,
+    pub agora_app_key: String,
+    pub agora_org_name: String,
+    pub agora_app_name: String,
+    pub agora_rest_api: String,
+    pub agora_chat_app_token: String,
+    pub agora_chat_user_token: String,
+    // Server config
     pub server_port: u16,
     pub base_url: String,
     pub frontend_url: String,
@@ -15,14 +20,23 @@ pub struct AppConfig {
 
 impl AppConfig {
     pub fn from_env() -> Self {
-        let private_key = resolve_private_key();
-
         Self {
-            vonage_api_key: env::var("VONAGE_API_KEY").unwrap_or_default(),
-            vonage_api_secret: env::var("VONAGE_API_SECRET").unwrap_or_default(),
-            vonage_application_id: env::var("VONAGE_APPLICATION_ID").unwrap_or_default(),
-            vonage_private_key: private_key,
-            vonage_number: env::var("VONAGE_NUMBER").unwrap_or_default(),
+            agora_app_id: env::var("AGORA_APP_ID")
+                .unwrap_or_else(|_| "41200037042".to_string()),
+            agora_app_certificate: env::var("AGORA_APP_CERTIFICATE")
+                .unwrap_or_default(),
+            agora_app_key: env::var("AGORA_APP_KEY")
+                .unwrap_or_else(|_| "41200037042#200051503".to_string()),
+            agora_org_name: env::var("AGORA_ORG_NAME")
+                .unwrap_or_else(|_| "41200037042".to_string()),
+            agora_app_name: env::var("AGORA_APP_NAME")
+                .unwrap_or_else(|_| "200051503".to_string()),
+            agora_rest_api: env::var("AGORA_REST_API")
+                .unwrap_or_else(|_| "a41.chat.agora.io".to_string()),
+            agora_chat_app_token: env::var("AGORA_CHAT_APP_TOKEN")
+                .unwrap_or_else(|_| "007eJxTYHi6yGWlUAv/30fTS5Zv/7D+ySPn7btm1zG/Sl26wW3umx9mCgyJhmmGqUkWxoaJKeYmqYnJSammaQaJxqmG5kap5kmJad+8dLIaAhkZ5MPEGBgZWIGYiQHEZ2AAALyxIVU=".to_string()),
+            agora_chat_user_token: env::var("AGORA_CHAT_USER_TOKEN")
+                .unwrap_or_else(|_| "007eJxTYDC+ojchac21HLMzenZCAhU9n+dpyKrIepZG6pvNk+lzvaDAkGiYZpiaZGFsmJhibpKamJyUappmkGicamhulGqelJj23ksnqyGQkWFxqC0LIwMrAyMQgvgqDBYpKSYmqSkGumZmFpa6hkBzdBOTLE10U5LSjMxNjc1Mk5JMAGfVJPw=".to_string()),
             server_port: env::var("PORT")
                 .unwrap_or_else(|_| "3039".to_string())
                 .parse()
@@ -35,17 +49,4 @@ impl AppConfig {
                 .unwrap_or_else(|_| "https://api.thbtechub.sbs".to_string()),
         }
     }
-}
-
-fn resolve_private_key() -> String {
-    if let Ok(b64) = env::var("VONAGE_PRIVATE_KEY_B64") {
-        use base64::Engine;
-        if let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(&b64) {
-            return String::from_utf8(bytes).unwrap_or_default();
-        }
-    }
-    if let Ok(path) = env::var("VONAGE_PRIVATE_KEY_PATH") {
-        return std::fs::read_to_string(&path).unwrap_or_default();
-    }
-    std::fs::read_to_string("./keys/private.key").unwrap_or_default()
 }

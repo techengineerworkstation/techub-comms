@@ -6,14 +6,14 @@ use crate::api;
 pub fn MessagesPage() -> impl IntoView {
     let (to, set_to) = create_signal(String::new());
     let (text, set_text) = create_signal(String::new());
-    let (channel, set_channel) = create_signal("sms".to_string());
+    let (channel, set_channel) = create_signal("text".to_string());
     let (status, set_status) = create_signal(None::<String>);
     let (sending, set_sending) = create_signal(false);
 
     let channels = vec![
-        ("sms", "SMS", "\u{1F4E7}", "from-teal-500 to-teal-600"),
-        ("whatsapp", "WhatsApp", "\u{1F4AC}", "from-green-500 to-green-600"),
-        ("mms", "MMS", "\u{1F5BC}", "from-beige-400 to-beige-600"),
+        ("text", "Text", "\u{1F4E7}", "from-teal-500 to-teal-600"),
+        ("image", "Image", "\u{1F5BC}", "from-beige-400 to-beige-600"),
+        ("group", "Group", "\u{1F465}", "from-teal-600 to-teal-700"),
     ];
 
     view! {
@@ -24,8 +24,8 @@ pub fn MessagesPage() -> impl IntoView {
                     <span class="text-2xl">"\u{1F4AC}"</span>
                 </div>
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900">"Texts"</h1>
-                    <p class="text-sm text-gray-500">"Send SMS, WhatsApp, and MMS texts"</p>
+                    <h1 class="text-3xl font-bold text-gray-900">"Agora Chat"</h1>
+                    <p class="text-sm text-gray-500">"Send text, images, and group messages"</p>
                 </div>
             </div>
 
@@ -66,8 +66,8 @@ pub fn MessagesPage() -> impl IntoView {
                     let ch = channel.get();
                     spawn_local(async move {
                         let r = match ch.as_str() {
-                            "whatsapp" => api::send_whatsapp_api(&t, &m).await,
-                            _ => api::send_sms_api(&t, &m).await,
+                            "image" => api::send_image_message("user", &t, &m).await,
+                            _ => api::send_text_message("user", &t, &m).await,
                         };
                         match r {
                             Ok(r) => {
@@ -80,9 +80,9 @@ pub fn MessagesPage() -> impl IntoView {
                     });
                 } class="space-y-4">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">"To"</label>
-                        <input type="tel"
-                            placeholder="+1 234 567 8901"
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">"To (Username)"</label>
+                        <input type="text"
+                            placeholder="Recipient username"
                             prop:value=to
                             on:input=move |ev| set_to.set(event_target_value(&ev))
                             class="input text-base"

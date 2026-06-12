@@ -16,13 +16,10 @@ pub fn VideoControls(
     set_chat_open: WriteSignal<bool>,
     is_participants_open: ReadSignal<bool>,
     set_participants_open: WriteSignal<bool>,
-    captions_id: ReadSignal<Option<String>>,
-    set_captions_id: WriteSignal<Option<String>>,
-    room: String,
+    channel: String,
     on_leave: impl Fn() + 'static,
 ) -> impl IntoView {
-    let room_for_rec = room.clone();
-    let room_for_cc = room.clone();
+    let channel_for_rec = channel.clone();
 
     view! {
         <div class="h-24 bg-white border-t border-beige-100 flex items-center justify-center gap-2 px-6"
@@ -71,12 +68,12 @@ pub fn VideoControls(
                     "flex flex-col items-center gap-1 p-3 rounded-xl bg-white text-gray-600 border border-beige-200 hover:bg-beige-50 hover:shadow-md transition-all duration-200 cursor-pointer"
                 }
                 on:click=move |_| {
-                    let rm = room_for_rec.clone();
+                    let ch = channel_for_rec.clone();
                     if is_recording.get() {
-                        spawn_local(async move { let _ = api::stop_archive(&rm, "latest").await; });
+                        spawn_local(async move { let _ = api::stop_recording("", "").await; });
                         set_recording.set(false);
                     } else {
-                        spawn_local(async move { let _ = api::start_archive(&rm).await; });
+                        spawn_local(async move { let _ = api::start_recording(&ch, 0).await; });
                         set_recording.set(true);
                     }
                 }
@@ -117,31 +114,6 @@ pub fn VideoControls(
             >
                 <span class="text-xl">"\u{1F4AC}"</span>
                 <span class="text-xs">"Chat"</span>
-            </button>
-
-            <button
-                class=move || if captions_id.get().is_some() {
-                    "flex flex-col items-center gap-1 p-3 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 text-white shadow-md hover:shadow-lg transition-all duration-200 cursor-pointer"
-                } else {
-                    "flex flex-col items-center gap-1 p-3 rounded-xl bg-white text-gray-600 border border-beige-200 hover:bg-beige-50 hover:shadow-md transition-all duration-200 cursor-pointer"
-                }
-                on:click=move |_| {
-                    let rm = room_for_cc.clone();
-                    let cur = captions_id.get();
-                    spawn_local(async move {
-                        if let Some(cid) = cur {
-                            let _ = api::disable_captions(&rm, &cid).await;
-                            set_captions_id.set(None);
-                        } else {
-                            if let Ok(r) = api::enable_captions(&rm).await {
-                                set_captions_id.set(Some(r.captions_id));
-                            }
-                        }
-                    });
-                }
-            >
-                <span class="text-xl">"\u{1F4DD}"</span>
-                <span class="text-xs">"CC"</span>
             </button>
 
             <div class="mx-2 h-12 w-px bg-beige-200"></div>

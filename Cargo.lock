@@ -468,6 +468,7 @@ dependencies = [
  "env_logger",
  "futures",
  "hex",
+ "hmac",
  "jsonwebtoken",
  "lazy_static",
  "log",

@@ -47,126 +47,98 @@ async fn fetch_post<T: serde::de::DeserializeOwned, B: serde::Serialize>(path: &
     serde_wasm_bindgen::from_value(json_val).map_err(|e| format!("{:?}", e))
 }
 
-async fn fetch_put<T: serde::de::DeserializeOwned, B: serde::Serialize>(path: &str, body: &B) -> Result<T, String> {
-    let url = format!("{}{}", api_base(), path);
-    let body_str = serde_json::to_string(body).map_err(|e| e.to_string())?;
-    let opts = RequestInit::new();
-    opts.set_method("PUT");
-    opts.set_mode(RequestMode::Cors);
-    opts.set_body(&JsValue::from_str(&body_str));
-    let req = Request::new_with_str_and_init(&url, &opts).map_err(|e| format!("{:?}", e))?;
-    req.headers().set("Content-Type", "application/json").ok();
-    let win = web_sys::window().expect("no window");
-    let resp_val = JsFuture::from(win.fetch_with_request(&req)).await.map_err(|e| format!("{:?}", e))?;
-    let resp: Response = resp_val.dyn_into().map_err(|_| "bad response".to_string())?;
-    if !resp.ok() { return Err(format!("HTTP {}", resp.status())); }
-    let json_val = JsFuture::from(resp.json().map_err(|e| format!("{:?}", e))?).await.map_err(|e| format!("{:?}", e))?;
-    serde_wasm_bindgen::from_value(json_val).map_err(|e| format!("{:?}", e))
-}
-
-// ─── API Response Types ─────────────────────────────────────────────
+// ─── Agora API Response Types ─────────────────────────────────────
 
 #[derive(serde::Deserialize, Clone)]
-pub struct VideoSessionResp {
-    #[serde(rename = "sessionId")]
-    pub session_id: String,
+pub struct VideoTokenResp {
     pub token: String,
-    #[serde(rename = "apiKey")]
-    pub api_key: String,
-}
-
-#[derive(serde::Deserialize)]
-pub struct ArchivesResp {
-    pub archives: Vec<ArchiveResp>,
+    #[serde(rename = "appId")]
+    pub app_id: String,
+    pub channel: String,
+    pub uid: u32,
 }
 
 #[derive(serde::Deserialize, Clone)]
-pub struct ArchiveResp {
-    pub id: String,
-    pub name: String,
-    pub status: String,
-    #[serde(rename = "createdAt")]
-    pub created_at: String,
-    pub duration: Option<f64>,
-    pub url: Option<String>,
+pub struct AgoraConfigResp {
+    #[serde(rename = "appId")]
+    pub app_id: String,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Clone)]
 pub struct CallResp {
-    pub uuid: String,
+    pub channel: String,
+    #[serde(rename = "appId")]
+    pub app_id: String,
     pub status: String,
 }
 
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Clone)]
 pub struct MsgResp {
     #[serde(rename = "messageId")]
     pub message_id: String,
     pub status: String,
 }
 
-#[derive(serde::Deserialize)]
-pub struct CaptionsResp {
-    #[serde(rename = "captionsId")]
-    pub captions_id: String,
-}
-
-#[derive(serde::Deserialize)]
+#[derive(serde::Deserialize, Clone)]
 pub struct GenericResp {
     pub message: Option<String>,
+    pub status: Option<String>,
 }
 
-// ─── API Functions ───────────────────────────────────────────────────
+// ─── Agora API Functions ───────────────────────────────────────────
 
-pub async fn get_session(room: &str) -> Result<VideoSessionResp, String> {
-    fetch_get(&format!("/api/video/session/{}", room)).await
-}
-
-pub async fn start_archive(room: &str) -> Result<GenericResp, String> {
-    fetch_post(&format!("/api/video/session/{}/startArchive", room), &serde_json::json!({})).await
-}
-
-pub async fn stop_archive(room: &str, aid: &str) -> Result<GenericResp, String> {
-    fetch_post(&format!("/api/video/session/{}/{}/stopArchive", room, aid), &serde_json::json!({})).await
-}
-
-pub async fn list_archives(room: &str) -> Result<ArchivesResp, String> {
-    fetch_get(&format!("/api/video/session/{}/archives", room)).await
-}
-
-pub async fn enable_captions(room: &str) -> Result<CaptionsResp, String> {
-    fetch_post(&format!("/api/video/session/{}/enableCaptions", room), &serde_json::json!({})).await
-}
-
-pub async fn disable_captions(room: &str, cid: &str) -> Result<GenericResp, String> {
-    fetch_post(&format!("/api/video/session/{}/{}/disableCaptions", room, cid), &serde_json::json!({})).await
-}
-
-pub async fn create_call(to: &str, text: Option<&str>) -> Result<CallResp, String> {
-    let mut body = serde_json::json!({ "to": to });
-    if let Some(t) = text { body["text"] = serde_json::json!(t); }
-    fetch_post("/api/voice/call", &body).await
-}
-
-pub async fn modify_call(uuid: &str, action: &str) -> Result<GenericResp, String> {
-    fetch_put(&format!("/api/voice/call/{}", uuid), &serde_json::json!({ "action": action })).await
-}
-
-pub async fn play_tts(uuid: &str, text: &str) -> Result<GenericResp, String> {
-    fetch_post(&format!("/api/voice/talk/{}", uuid), &serde_json::json!({
-        "text": text,
-        "language": "en-US",
-        "voice_name": "Amy"
+pub async fn get_video_token(channel: &str, uid: u32) -> Result<VideoTokenResp, String> {
+    fetch_post("/api/video/token", &serde_json::json!({
+        "channel": channel,
+        "uid": uid,
+        "role": "publisher"
     })).await
 }
 
-pub async fn send_dtmf_api(uuid: &str, digits: &str) -> Result<GenericResp, String> {
-    fetch_post(&format!("/api/voice/dtmf/{}", uuid), &serde_json::json!({ "digits": digits })).await
+pub async fn get_agora_config() -> Result<AgoraConfigResp, String> {
+    fetch_get("/api/video/config").await
 }
 
-pub async fn send_sms_api(to: &str, text: &str) -> Result<MsgResp, String> {
-    fetch_post("/api/message/send", &serde_json::json!({ "to": to, "text": text })).await
+pub async fn start_recording(channel: &str, uid: u32) -> Result<GenericResp, String> {
+    fetch_post("/api/video/recording/start", &serde_json::json!({
+        "channel": channel,
+        "uid": uid
+    })).await
 }
 
-pub async fn send_whatsapp_api(to: &str, text: &str) -> Result<MsgResp, String> {
-    fetch_post("/api/message/send-whatsapp", &serde_json::json!({ "to": to, "text": text })).await
+pub async fn stop_recording(resource_id: &str, sid: &str) -> Result<GenericResp, String> {
+    fetch_post("/api/video/recording/stop", &serde_json::json!({
+        "resourceId": resource_id,
+        "sid": sid
+    })).await
+}
+
+pub async fn initiate_call(to: &str, channel: Option<&str>) -> Result<CallResp, String> {
+    let mut body = serde_json::json!({ "to": to });
+    if let Some(ch) = channel { body["channel"] = serde_json::json!(ch); }
+    fetch_post("/api/voice/call", &body).await
+}
+
+pub async fn send_call_signal(from: &str, to: &str, signal_type: &str) -> Result<GenericResp, String> {
+    fetch_post("/api/voice/signal", &serde_json::json!({
+        "from": from,
+        "to": to,
+        "signal_type": signal_type
+    })).await
+}
+
+pub async fn send_text_message(from: &str, to: &str, content: &str) -> Result<MsgResp, String> {
+    fetch_post("/api/message/send", &serde_json::json!({
+        "from": from,
+        "to": to,
+        "content": content
+    })).await
+}
+
+pub async fn send_image_message(from: &str, to: &str, image_url: &str) -> Result<MsgResp, String> {
+    fetch_post("/api/message/send-image", &serde_json::json!({
+        "from": from,
+        "to": to,
+        "image_url": image_url
+    })).await
 }

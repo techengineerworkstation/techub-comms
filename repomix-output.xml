@@ -1,0 +1,1358 @@
+This file is a merged representation of a subset of the codebase, containing specifically included files and files not matching ignore patterns, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of a subset of the repository's contents that is considered the most important context.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Only files matching these patterns are included: apps/web/src/**/*.tsx, apps/web/src/**/*.ts
+- Files matching these patterns are excluded: **/keys/**, **/*.key, **/*.env*
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+apps/
+  web/
+    src/
+      components/
+        ui/
+          Header.tsx
+          Layout.tsx
+          Sidebar.tsx
+        video/
+          ChatPanel.tsx
+          ParticipantList.tsx
+          VideoControls.tsx
+          VideoRoom.tsx
+      pages/
+        LandingPage.tsx
+        MeetingRoom.tsx
+        MessagesPage.tsx
+        RecordingsPage.tsx
+        VoicePage.tsx
+      App.tsx
+      main.tsx
+      vite-env.d.ts
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="apps/web/src/components/ui/Header.tsx">
+import { Bell, Settings } from 'lucide-react';
+
+export default function Header() {
+  return (
+    <header className="h-16 bg-white border-b border-beige-100 flex items-center justify-between px-6">
+      <div>
+        <h2 className="text-lg font-semibold text-gray-900">Welcome to Techub Comms</h2>
+      </div>
+      <div className="flex items-center gap-4">
+        <button className="btn-icon text-gray-500 hover:text-gray-700">
+          <Bell size={20} />
+        </button>
+        <button className="btn-icon text-gray-500 hover:text-gray-700">
+          <Settings size={20} />
+        </button>
+      </div>
+    </header>
+  );
+}
+</file>
+
+<file path="apps/web/src/components/ui/Layout.tsx">
+import { Outlet } from 'react-router-dom';
+import Sidebar from './Sidebar';
+import Header from './Header';
+
+export default function Layout() {
+  return (
+    <div className="flex h-screen bg-beige-50">
+      <Sidebar />
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <Header />
+        <main className="flex-1 overflow-auto p-6">
+          <Outlet />
+        </main>
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="apps/web/src/components/ui/Sidebar.tsx">
+import { Link, useLocation } from 'react-router-dom';
+import { Video, Phone, MessageSquare, FolderOpen, Home } from 'lucide-react';
+
+const navItems = [
+  { path: '/', label: 'Home', icon: Home },
+  { path: '/voice', label: 'Voice Calls', icon: Phone },
+  { path: '/messages', label: 'Messages', icon: MessageSquare },
+  { path: '/recordings', label: 'Recordings', icon: FolderOpen },
+];
+
+export default function Sidebar() {
+  const location = useLocation();
+
+  return (
+    <aside className="w-64 bg-white border-r border-beige-100 flex flex-col">
+      <div className="p-6 border-b border-beige-100">
+        <h1 className="text-2xl font-bold text-teal-600">Techub</h1>
+        <p className="text-sm text-gray-500">Comms App</p>
+      </div>
+      <nav className="flex-1 p-4 space-y-1">
+        {navItems.map((item) => {
+          const Icon = item.icon;
+          const isActive = location.pathname === item.path;
+          return (
+            <Link
+              key={item.path}
+              to={item.path}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors duration-200 ${
+                isActive
+                  ? 'bg-teal-50 text-teal-700 font-medium'
+                  : 'text-gray-600 hover:bg-beige-50 hover:text-gray-900'
+              }`}
+            >
+              <Icon size={20} />
+              <span>{item.label}</span>
+            </Link>
+          );
+        })}
+      </nav>
+      <div className="p-4 border-t border-beige-100">
+        <div className="flex items-center gap-3">
+          <div className="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+            U
+          </div>
+          <div>
+            <p className="text-sm font-medium text-gray-900">User</p>
+            <p className="text-xs text-gray-500">Online</p>
+          </div>
+        </div>
+      </div>
+    </aside>
+  );
+}
+</file>
+
+<file path="apps/web/src/components/video/ParticipantList.tsx">
+import { Mic, MicOff, Video, VideoOff } from 'lucide-react';
+
+interface ParticipantListProps {
+  participants: any[];
+}
+
+export default function ParticipantList({ participants }: ParticipantListProps) {
+  return (
+    <div className="h-full flex flex-col">
+      <div className="p-4 border-b border-beige-100">
+        <h3 className="font-semibold text-gray-900">Participants ({participants.length + 1})</h3>
+      </div>
+      <div className="flex-1 overflow-auto p-4 space-y-3">
+        {/* Local user */}
+        <div className="flex items-center justify-between p-3 bg-beige-50 rounded-lg">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-teal-500 rounded-full flex items-center justify-center text-white text-sm font-medium">
+              Y
+            </div>
+            <span className="font-medium text-gray-900">You</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Mic size={16} className="text-gray-500" />
+            <Video size={16} className="text-gray-500" />
+          </div>
+        </div>
+
+        {/* Remote participants */}
+        {participants.map((p, i) => (
+          <div key={p.id} className="flex items-center justify-between p-3 hover:bg-beige-50 rounded-lg">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 bg-beige-400 rounded-full flex items-center justify-center text-white text-sm font-medium">
+                {String.fromCharCode(65 + i)}
+              </div>
+              <span className="text-gray-900">Participant {i + 1}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <Mic size={16} className="text-gray-400" />
+              <Video size={16} className="text-gray-400" />
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="apps/web/src/pages/LandingPage.tsx">
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Video, Phone, MessageSquare, Users } from 'lucide-react';
+
+export default function LandingPage() {
+  const [roomName, setRoomName] = useState('');
+  const navigate = useNavigate();
+
+  const handleJoinRoom = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (roomName.trim()) {
+      navigate(`/meeting/${roomName.trim()}`);
+    }
+  };
+
+  const quickActions = [
+    { label: 'Start Video Call', icon: Video, color: 'bg-teal-500', action: () => navigate(`/meeting/room-${Date.now()}`) },
+    { label: 'Voice Call', icon: Phone, color: 'bg-beige-500', action: () => navigate('/voice') },
+    { label: 'Send Message', icon: MessageSquare, color: 'bg-teal-600', action: () => navigate('/messages') },
+    { label: 'Group Meeting', icon: Users, color: 'bg-beige-600', action: () => navigate('/meeting/team-standup') },
+  ];
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      <div className="text-center mb-12">
+        <h1 className="text-4xl font-bold text-gray-900 mb-4">
+          Welcome to <span className="text-teal-500">Techub Comms</span>
+        </h1>
+        <p className="text-lg text-gray-600">
+          Connect with your team through video, voice, and messaging
+        </p>
+      </div>
+
+      {/* Join Room */}
+      <div className="card p-8 mb-8">
+        <h2 className="text-xl font-semibold mb-4">Join a Meeting</h2>
+        <form onSubmit={handleJoinRoom} className="flex gap-4">
+          <input
+            type="text"
+            placeholder="Enter room name..."
+            value={roomName}
+            onChange={(e) => setRoomName(e.target.value)}
+            className="input flex-1"
+          />
+          <button type="submit" className="btn-primary">
+            Join Room
+          </button>
+        </form>
+      </div>
+
+      {/* Quick Actions */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        {quickActions.map((action) => {
+          const Icon = action.icon;
+          return (
+            <button
+              key={action.label}
+              onClick={action.action}
+              className="card p-6 hover:shadow-md transition-shadow duration-200 text-left group"
+            >
+              <div className={`${action.color} w-12 h-12 rounded-lg flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-200`}>
+                <Icon size={24} className="text-white" />
+              </div>
+              <h3 className="font-semibold text-gray-900">{action.label}</h3>
+              <p className="text-sm text-gray-500 mt-1">Click to start</p>
+            </button>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="apps/web/src/App.tsx">
+import { Routes, Route } from 'react-router-dom';
+import Layout from './components/ui/Layout';
+import LandingPage from './pages/LandingPage';
+import MeetingRoom from './pages/MeetingRoom';
+import VoicePage from './pages/VoicePage';
+import MessagesPage from './pages/MessagesPage';
+import RecordingsPage from './pages/RecordingsPage';
+
+export default function App() {
+  return (
+    <Routes>
+      <Route path="/" element={<Layout />}>
+        <Route index element={<LandingPage />} />
+        <Route path="meeting/:room" element={<MeetingRoom />} />
+        <Route path="voice" element={<VoicePage />} />
+        <Route path="messages" element={<MessagesPage />} />
+        <Route path="recordings" element={<RecordingsPage />} />
+      </Route>
+    </Routes>
+  );
+}
+</file>
+
+<file path="apps/web/src/main.tsx">
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import App from './App';
+import './styles/globals.css';
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 30_000,
+      retry: 1,
+    },
+  },
+});
+
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
+    </QueryClientProvider>
+  </React.StrictMode>
+);
+</file>
+
+<file path="apps/web/src/vite-env.d.ts">
+/// <reference types="vite/client" />
+</file>
+
+<file path="apps/web/src/components/video/ChatPanel.tsx">
+import { useState, useEffect, useRef } from 'react';
+import { Send } from 'lucide-react';
+
+interface ChatMessage {
+  id: string;
+  sender: string;
+  text: string;
+  timestamp: Date;
+  isOwn: boolean;
+}
+
+interface ChatPanelProps {
+  session: any;
+}
+
+export default function ChatPanel({ session }: ChatPanelProps) {
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState('');
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  useEffect(() => {
+    if (!session) return;
+
+    const handleSignal = (event: any) => {
+      if (event.from?.connectionId === session.connection?.connectionId) return;
+
+      try {
+        const data = JSON.parse(event.data || '{}');
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: `${Date.now()}-${Math.random()}`,
+            sender: data.sender || 'Participant',
+            text: data.text,
+            timestamp: new Date(),
+            isOwn: false,
+          },
+        ]);
+      } catch {
+        // ignore malformed signals
+      }
+    };
+
+    session.on('signal:chat', handleSignal);
+    return () => {
+      session.off('signal:chat', handleSignal);
+    };
+  }, [session]);
+
+  const handleSend = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || !session) return;
+
+    const text = input.trim();
+    const sender = 'You';
+
+    session.signal(
+      {
+        type: 'chat',
+        data: JSON.stringify({ text, sender }),
+      },
+      (error: any) => {
+        if (error) {
+          console.error('Signal error:', error);
+        }
+      }
+    );
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `${Date.now()}-${Math.random()}`,
+        sender,
+        text,
+        timestamp: new Date(),
+        isOwn: true,
+      },
+    ]);
+
+    setInput('');
+  };
+
+  return (
+    <div className="h-full flex flex-col">
+      <div className="p-4 border-b border-beige-100">
+        <h3 className="font-semibold text-gray-900">Chat</h3>
+      </div>
+      <div className="flex-1 overflow-auto p-4 space-y-4">
+        {messages.length === 0 ? (
+          <p className="text-sm text-gray-400 text-center mt-8">No messages yet</p>
+        ) : (
+          messages.map((msg) => (
+            <div key={msg.id} className={`flex flex-col ${msg.isOwn ? 'items-end' : 'items-start'}`}>
+              <div
+                className={`max-w-[80%] px-4 py-2 rounded-lg ${
+                  msg.isOwn ? 'bg-teal-500 text-white' : 'bg-beige-100 text-gray-900'
+                }`}
+              >
+                {!msg.isOwn && <p className="text-xs font-medium mb-1">{msg.sender}</p>}
+                <p className="text-sm">{msg.text}</p>
+              </div>
+              <p className="text-xs text-gray-400 mt-1">
+                {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              </p>
+            </div>
+          ))
+        )}
+        <div ref={messagesEndRef} />
+      </div>
+      <form onSubmit={handleSend} className="p-4 border-t border-beige-100">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            placeholder="Type a message..."
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            className="input flex-1"
+          />
+          <button type="submit" className="btn-primary p-2">
+            <Send size={20} />
+          </button>
+        </div>
+      </form>
+    </div>
+  );
+}
+</file>
+
+<file path="apps/web/src/components/video/VideoControls.tsx">
+import { useState, type RefObject } from 'react';
+import {
+  Mic,
+  MicOff,
+  Video,
+  VideoOff,
+  Monitor,
+  MonitorOff,
+  PhoneOff,
+  MessageSquare,
+  Users,
+  Circle,
+  Captions,
+} from 'lucide-react';
+import { useSessionStore } from '@techub/shared';
+
+interface VideoControlsProps {
+  room: string;
+  onLeave: () => void;
+  onStartRecording: () => void;
+  onStopRecording: () => void;
+  publisherRef: RefObject<any>;
+  onToggleScreenShare: () => void;
+  onToggleCaptions: () => void;
+}
+
+export default function VideoControls({
+  room,
+  onLeave,
+  onStartRecording,
+  onStopRecording,
+  publisherRef,
+  onToggleScreenShare,
+  onToggleCaptions,
+}: VideoControlsProps) {
+  const {
+    isRecording,
+    isScreenSharing,
+    isChatOpen,
+    isParticipantsOpen,
+    captionsId,
+    toggleChat,
+    toggleParticipants,
+  } = useSessionStore();
+
+  const [isMuted, setIsMuted] = useState(false);
+  const [isVideoOff, setIsVideoOff] = useState(false);
+
+  const handleToggleMute = () => {
+    const publisher = publisherRef.current;
+    if (publisher) {
+      publisher.publishAudio(!isMuted);
+    }
+    setIsMuted(!isMuted);
+  };
+
+  const handleToggleVideo = () => {
+    const publisher = publisherRef.current;
+    if (publisher) {
+      publisher.publishVideo(!isVideoOff);
+    }
+    setIsVideoOff(!isVideoOff);
+  };
+
+  return (
+    <div className="h-20 bg-white border-t border-beige-100 flex items-center justify-center gap-3 px-6">
+      <button
+        onClick={handleToggleMute}
+        className={`btn-icon ${isMuted ? 'bg-red-100 text-red-500' : 'text-gray-600 hover:bg-beige-100'}`}
+        title={isMuted ? 'Unmute' : 'Mute'}
+      >
+        {isMuted ? <MicOff size={22} /> : <Mic size={22} />}
+      </button>
+
+      <button
+        onClick={handleToggleVideo}
+        className={`btn-icon ${isVideoOff ? 'bg-red-100 text-red-500' : 'text-gray-600 hover:bg-beige-100'}`}
+        title={isVideoOff ? 'Turn on camera' : 'Turn off camera'}
+      >
+        {isVideoOff ? <VideoOff size={22} /> : <Video size={22} />}
+      </button>
+
+      <button
+        onClick={onToggleScreenShare}
+        className={`btn-icon ${isScreenSharing ? 'bg-teal-100 text-teal-600' : 'text-gray-600 hover:bg-beige-100'}`}
+        title="Screen share"
+      >
+        {isScreenSharing ? <MonitorOff size={22} /> : <Monitor size={22} />}
+      </button>
+
+      <button
+        onClick={isRecording ? onStopRecording : onStartRecording}
+        className={`btn-icon ${isRecording ? 'bg-red-500 text-white animate-pulse' : 'text-gray-600 hover:bg-beige-100'}`}
+        title={isRecording ? 'Stop recording' : 'Start recording'}
+      >
+        <Circle size={22} fill={isRecording ? 'currentColor' : 'none'} />
+      </button>
+
+      <button
+        onClick={toggleParticipants}
+        className={`btn-icon ${isParticipantsOpen ? 'bg-teal-100 text-teal-600' : 'text-gray-600 hover:bg-beige-100'}`}
+        title="Participants"
+      >
+        <Users size={22} />
+      </button>
+
+      <button
+        onClick={toggleChat}
+        className={`btn-icon ${isChatOpen ? 'bg-teal-100 text-teal-600' : 'text-gray-600 hover:bg-beige-100'}`}
+        title="Chat"
+      >
+        <MessageSquare size={22} />
+      </button>
+
+      <button
+        onClick={onToggleCaptions}
+        className={`btn-icon ${captionsId ? 'bg-teal-100 text-teal-600' : 'text-gray-600 hover:bg-beige-100'}`}
+        title="Live captions"
+      >
+        <Captions size={22} />
+      </button>
+
+      <div className="mx-4 h-8 w-px bg-beige-200" />
+
+      <button
+        onClick={onLeave}
+        className="bg-red-500 hover:bg-red-600 text-white p-3 rounded-full transition-colors duration-200"
+        title="Leave meeting"
+      >
+        <PhoneOff size={22} />
+      </button>
+    </div>
+  );
+}
+</file>
+
+<file path="apps/web/src/pages/MeetingRoom.tsx">
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import VideoRoom from '../components/video/VideoRoom';
+
+const API_URL = import.meta.env.VITE_API_URL || '';
+
+export default function MeetingRoom() {
+  const { room } = useParams<{ room: string }>();
+  const navigate = useNavigate();
+  const [sessionData, setSessionData] = useState<{ sessionId: string; token: string; apiKey: string } | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!room) return;
+
+    const fetchSession = async () => {
+      try {
+        const res = await fetch(`${API_URL}/api/video/session/${room}`);
+        if (!res.ok) throw new Error('Failed to create session');
+        const data = await res.json();
+        setSessionData(data);
+      } catch (err: any) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchSession();
+  }, [room]);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-teal-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">Joining meeting room...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (error || !sessionData) {
+    return (
+      <div className="flex items-center justify-center h-full">
+        <div className="card p-8 text-center max-w-md">
+          <p className="text-red-500 mb-4">{error || 'Failed to join meeting'}</p>
+          <button onClick={() => navigate('/')} className="btn-primary">
+            Go Back
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <VideoRoom
+      room={room!}
+      sessionId={sessionData.sessionId}
+      token={sessionData.token}
+      apiKey={sessionData.apiKey}
+      onLeave={() => navigate('/')}
+    />
+  );
+}
+</file>
+
+<file path="apps/web/src/pages/MessagesPage.tsx">
+import { useState } from 'react';
+import { Send, MessageSquare, Image } from 'lucide-react';
+
+const API_URL = import.meta.env.VITE_API_URL || '';
+
+export default function MessagesPage() {
+  const [to, setTo] = useState('');
+  const [from, setFrom] = useState('');
+  const [text, setText] = useState('');
+  const [channel, setChannel] = useState<'sms' | 'whatsapp' | 'mms'>('sms');
+  const [status, setStatus] = useState<string | null>(null);
+  const [sending, setSending] = useState(false);
+
+  const handleSend = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!to || !text) return;
+
+    setSending(true);
+    setStatus(null);
+
+    try {
+      const endpoint = channel === 'whatsapp' ? '/api/message/send-whatsapp' : '/api/message/send';
+      const res = await fetch(`${API_URL}${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to, from, text }),
+      });
+      const data = await res.json();
+      setStatus(`Message sent! ID: ${data.messageId}`);
+      setText('');
+    } catch (err: any) {
+      setStatus(`Error: ${err.message}`);
+    } finally {
+      setSending(false);
+    }
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto">
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">Messages</h1>
+
+      <div className="card p-8">
+        <h2 className="text-xl font-semibold mb-6">Send a Message</h2>
+
+        {/* Channel Selector */}
+        <div className="flex gap-2 mb-6">
+          {(['sms', 'whatsapp', 'mms'] as const).map((ch) => (
+            <button
+              key={ch}
+              onClick={() => setChannel(ch)}
+              className={`px-4 py-2 rounded-lg font-medium text-sm capitalize ${
+                channel === ch
+                  ? 'bg-teal-500 text-white'
+                  : 'bg-beige-100 text-gray-700 hover:bg-beige-200'
+              }`}
+            >
+              {ch === 'sms' ? 'SMS' : ch === 'whatsapp' ? 'WhatsApp' : 'MMS'}
+            </button>
+          ))}
+        </div>
+
+        <form onSubmit={handleSend} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">To</label>
+            <input
+              type="tel"
+              placeholder="+1 234 567 8901"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+              className="input"
+              required
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">From (optional)</label>
+            <input
+              type="tel"
+              placeholder="Your Vonage number"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+              className="input"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Message</label>
+            <textarea
+              placeholder="Type your message..."
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              className="input min-h-[120px]"
+              required
+            />
+          </div>
+          <button type="submit" className="btn-primary w-full" disabled={sending}>
+            <Send size={18} className="inline mr-2" />
+            {sending ? 'Sending...' : `Send ${channel.toUpperCase()}`}
+          </button>
+        </form>
+
+        {status && (
+          <div className={`mt-4 p-4 rounded-lg text-sm ${status.startsWith('Error') ? 'bg-red-50 text-red-600' : 'bg-teal-50 text-teal-700'}`}>
+            {status}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+</file>
+
+<file path="apps/web/src/pages/RecordingsPage.tsx">
+import { useState, useEffect } from 'react';
+import { Play, Download, Trash2, RefreshCw } from 'lucide-react';
+
+const API_URL = import.meta.env.VITE_API_URL || '';
+
+interface Recording {
+  id: string;
+  name: string;
+  status: string;
+  createdAt: string;
+  duration?: number;
+  url?: string;
+}
+
+export default function RecordingsPage() {
+  const [recordings, setRecordings] = useState<Recording[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [roomFilter, setRoomFilter] = useState('');
+
+  const fetchRecordings = async () => {
+    if (!roomFilter) return;
+    setLoading(true);
+    try {
+      const res = await fetch(`${API_URL}/api/video/session/${roomFilter}/archives`);
+      const data = await res.json();
+      setRecordings(data.archives || []);
+    } catch (err) {
+      console.error('Failed to fetch recordings:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="max-w-4xl mx-auto">
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">Recordings</h1>
+
+      <div className="card p-6 mb-6">
+        <div className="flex gap-4">
+          <input
+            type="text"
+            placeholder="Enter room name..."
+            value={roomFilter}
+            onChange={(e) => setRoomFilter(e.target.value)}
+            className="input flex-1"
+          />
+          <button onClick={fetchRecordings} className="btn-primary" disabled={loading}>
+            <RefreshCw size={18} className={`inline mr-2 ${loading ? 'animate-spin' : ''}`} />
+            Load
+          </button>
+        </div>
+      </div>
+
+      {recordings.length === 0 ? (
+        <div className="card p-12 text-center">
+          <p className="text-gray-500">
+            {roomFilter ? 'No recordings found for this room' : 'Enter a room name to view recordings'}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {recordings.map((rec) => (
+            <div key={rec.id} className="card p-4 flex items-center justify-between">
+              <div>
+                <h3 className="font-medium text-gray-900">{rec.name || 'Untitled Recording'}</h3>
+                <p className="text-sm text-gray-500">
+                  {new Date(rec.createdAt).toLocaleString()} &middot; Status: {rec.status}
+                  {rec.duration ? ` &middot; ${Math.round(rec.duration)}s` : ''}
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {rec.url && (
+                  <>
+                    <button className="btn-icon text-teal-500 hover:bg-teal-50" title="Play">
+                      <Play size={20} />
+                    </button>
+                    <a href={rec.url} download className="btn-icon text-gray-500 hover:bg-gray-50" title="Download">
+                      <Download size={20} />
+                    </a>
+                  </>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+</file>
+
+<file path="apps/web/src/pages/VoicePage.tsx">
+import { useState } from 'react';
+import { Phone, PhoneOff, Mic, MicOff, Hash } from 'lucide-react';
+
+const API_URL = import.meta.env.VITE_API_URL || '';
+
+export default function VoicePage() {
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [callText, setCallText] = useState('');
+  const [activeCall, setActiveCall] = useState<{ uuid: string } | null>(null);
+  const [isMuted, setIsMuted] = useState(false);
+  const [callStatus, setCallStatus] = useState<string | null>(null);
+  const [dtmf, setDtmf] = useState('');
+
+  const handleCall = async (type: 'simple' | 'ivr' | 'conference') => {
+    try {
+      setCallStatus('Initiating call...');
+      const body: any = { to: phoneNumber };
+      if (type === 'ivr') body.ivr = { prompt: 'Welcome. Press 1 for sales, 2 for support.' };
+      if (type === 'conference') body.conference = 'techub-room';
+      if (type === 'simple') body.text = callText || 'Hello from Techub Comms.';
+
+      const res = await fetch(`${API_URL}/api/voice/call`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      const data = await res.json();
+      setActiveCall({ uuid: data.uuid });
+      setCallStatus('Call connected');
+    } catch (err: any) {
+      setCallStatus(`Error: ${err.message}`);
+    }
+  };
+
+  const handleHangup = async () => {
+    if (!activeCall) return;
+    try {
+      await fetch(`${API_URL}/api/voice/call/${activeCall.uuid}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'hangup' }),
+      });
+      setActiveCall(null);
+      setCallStatus('Call ended');
+    } catch (err: any) {
+      setCallStatus(`Error: ${err.message}`);
+    }
+  };
+
+  const handleMute = async () => {
+    if (!activeCall) return;
+    const action = isMuted ? 'unmute' : 'mute';
+    await fetch(`${API_URL}/api/voice/call/${activeCall.uuid}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ action }),
+    });
+    setIsMuted(!isMuted);
+  };
+
+  const handleSendDTMF = async () => {
+    if (!activeCall || !dtmf) return;
+    await fetch(`${API_URL}/api/voice/dtmf/${activeCall.uuid}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ digits: dtmf }),
+    });
+    setDtmf('');
+  };
+
+  const handlePlayTTS = async () => {
+    if (!activeCall || !callText) return;
+    await fetch(`${API_URL}/api/voice/talk/${activeCall.uuid}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text: callText, language: 'en-US', voiceName: 'Amy' }),
+    });
+  };
+
+  return (
+    <div className="max-w-2xl mx-auto">
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">Voice Calls</h1>
+
+      {/* Dialer */}
+      <div className="card p-8 mb-6">
+        <h2 className="text-xl font-semibold mb-4">Make a Call</h2>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+            <input
+              type="tel"
+              placeholder="+1 234 567 8901"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              className="input"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">TTS Message</label>
+            <textarea
+              placeholder="Enter text to speak..."
+              value={callText}
+              onChange={(e) => setCallText(e.target.value)}
+              className="input min-h-[100px]"
+            />
+          </div>
+          <div className="flex gap-3">
+            <button onClick={() => handleCall('simple')} className="btn-primary flex-1" disabled={!!activeCall}>
+              <Phone size={18} className="inline mr-2" />
+              Call
+            </button>
+            <button onClick={() => handleCall('ivr')} className="btn-secondary flex-1" disabled={!!activeCall}>
+              IVR Call
+            </button>
+            <button onClick={() => handleCall('conference')} className="btn-secondary flex-1" disabled={!!activeCall}>
+              Conference
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Active Call Controls */}
+      {activeCall && (
+        <div className="card p-8 mb-6">
+          <h2 className="text-xl font-semibold mb-4">Active Call</h2>
+          <p className="text-sm text-gray-500 mb-4">Call ID: {activeCall.uuid}</p>
+          {callStatus && <p className="text-sm text-teal-600 mb-4">{callStatus}</p>}
+
+          <div className="flex gap-3 mb-4">
+            <button
+              onClick={handleMute}
+              className={`btn-icon ${isMuted ? 'bg-red-100 text-red-500' : 'text-gray-600'}`}
+            >
+              {isMuted ? <MicOff size={22} /> : <Mic size={22} />}
+            </button>
+            <button onClick={handlePlayTTS} className="btn-secondary">
+              Play TTS
+            </button>
+            <button onClick={handleHangup} className="btn-danger flex-1">
+              <PhoneOff size={18} className="inline mr-2" />
+              Hang Up
+            </button>
+          </div>
+
+          {/* DTMF Keypad */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">Send DTMF</label>
+            <div className="grid grid-cols-4 gap-2">
+              {['1', '2', '3', '4', '5', '6', '7', '8', '9', '*', '0', '#'].map((digit) => (
+                <button
+                  key={digit}
+                  onClick={() => setDtmf((prev) => prev + digit)}
+                  className="p-3 bg-beige-100 hover:bg-beige-200 rounded-lg font-mono text-lg"
+                >
+                  {digit}
+                </button>
+              ))}
+            </div>
+            {dtmf && (
+              <div className="mt-2 flex gap-2">
+                <input value={dtmf} readOnly className="input flex-1 font-mono" />
+                <button onClick={handleSendDTMF} className="btn-primary">Send</button>
+                <button onClick={() => setDtmf('')} className="btn-secondary">Clear</button>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Call Status */}
+      {callStatus && !activeCall && (
+        <div className="card p-4 text-center text-sm text-gray-600">
+          {callStatus}
+        </div>
+      )}
+    </div>
+  );
+}
+</file>
+
+<file path="apps/web/src/components/video/VideoRoom.tsx">
+import { useEffect, useRef, useState, useCallback } from 'react';
+import VideoControls from './VideoControls';
+import ParticipantList from './ParticipantList';
+import ChatPanel from './ChatPanel';
+import { useSessionStore } from '@techub/shared';
+
+const API_URL = import.meta.env.VITE_API_URL || '';
+
+interface VideoRoomProps {
+  room: string;
+  sessionId: string;
+  token: string;
+  apiKey: string;
+  onLeave: () => void;
+}
+
+export default function VideoRoom({ room, sessionId, token, apiKey, onLeave }: VideoRoomProps) {
+  const sessionRef = useRef<any>(null);
+  const publisherRef = useRef<any>(null);
+  const subscriberRefs = useRef<Map<string, HTMLDivElement>>(new Map());
+  const pendingStreamsRef = useRef<Map<string, any>>(new Map());
+  const [isConnected, setIsConnected] = useState(false);
+  const [participants, setParticipants] = useState<any[]>([]);
+  const { isChatOpen, isParticipantsOpen, isRecording, isScreenSharing, setScreenSharing, setCaptionsId } = useSessionStore();
+  const screenSharingPublisherRef = useRef<any>(null);
+
+  const setSubscriberRef = useCallback((id: string, el: HTMLDivElement | null) => {
+    if (el) {
+      subscriberRefs.current.set(id, el);
+    } else {
+      subscriberRefs.current.delete(id);
+    }
+  }, []);
+
+  // Subscribe to pending streams once their DOM refs are available
+  useEffect(() => {
+    pendingStreamsRef.current.forEach((stream, connectionId) => {
+      const container = subscriberRefs.current.get(connectionId);
+      if (container && sessionRef.current) {
+        sessionRef.current.subscribe(stream, container, {
+          insertMode: 'replace',
+          width: '100%',
+          height: '100%',
+          style: { buttonDisplayMode: 'off' },
+        });
+        pendingStreamsRef.current.delete(connectionId);
+      }
+    });
+  }, [participants]);
+
+  const handleStreamCreated = useCallback((event: any) => {
+    const stream = event.stream;
+    const connectionId = stream.connection.connectionId;
+    pendingStreamsRef.current.set(connectionId, stream);
+    setParticipants((prev) => [...prev, { stream, id: connectionId }]);
+  }, []);
+
+  const handleStreamDestroyed = useCallback((event: any) => {
+    const connectionId = event.stream.connection.connectionId;
+    pendingStreamsRef.current.delete(connectionId);
+    subscriberRefs.current.delete(connectionId);
+    setParticipants((prev) => prev.filter((p) => p.id !== connectionId));
+  }, []);
+
+  useEffect(() => {
+    if (!sessionId || !token) return;
+
+    const initSession = async () => {
+      try {
+        const OT = (window as any).OT;
+        if (!OT) {
+          console.error('OpenTok SDK not loaded');
+          return;
+        }
+
+        const session = OT.initSession(apiKey, sessionId);
+
+        session.on('streamCreated', handleStreamCreated);
+        session.on('streamDestroyed', handleStreamDestroyed);
+
+        session.connect(token, (error: any) => {
+          if (error) {
+            console.error('Session connection error:', error);
+            return;
+          }
+          setIsConnected(true);
+
+          const publisher = OT.initPublisher('publisher', {
+            insertMode: 'append',
+            width: '100%',
+            height: '100%',
+            style: { buttonDisplayMode: 'off' },
+            name: 'You',
+          });
+
+          session.publish(publisher);
+          publisherRef.current = publisher;
+        });
+
+        sessionRef.current = session;
+      } catch (err) {
+        console.error('Failed to initialize session:', err);
+      }
+    };
+
+    initSession();
+
+    return () => {
+      if (sessionRef.current) {
+        sessionRef.current.disconnect();
+      }
+    };
+  }, [sessionId, token, apiKey, handleStreamCreated, handleStreamDestroyed]);
+
+  const handleStartRecording = async () => {
+    try {
+      await fetch(`${API_URL}/api/video/session/${room}/startArchive`, { method: 'POST' });
+      useSessionStore.getState().setRecording(true);
+    } catch (err) {
+      console.error('Failed to start recording:', err);
+    }
+  };
+
+  const handleStopRecording = async () => {
+    try {
+      const res = await fetch(`${API_URL}/api/video/session/${room}/archives`);
+      const data = await res.json();
+      if (data.archives?.length > 0) {
+        const latest = data.archives[0];
+        await fetch(`${API_URL}/api/video/session/${room}/${latest.id}/stopArchive`, { method: 'POST' });
+      }
+      useSessionStore.getState().setRecording(false);
+    } catch (err) {
+      console.error('Failed to stop recording:', err);
+    }
+  };
+
+  const handleToggleScreenShare = async () => {
+    const OT = (window as any).OT;
+    if (!OT || !sessionRef.current || !publisherRef.current) return;
+
+    if (isScreenSharing) {
+      // Stop screen sharing — republish camera
+      if (screenSharingPublisherRef.current) {
+        sessionRef.current.unpublish(screenSharingPublisherRef.current);
+        screenSharingPublisherRef.current.destroy();
+        screenSharingPublisherRef.current = null;
+      }
+      const cameraPublisher = OT.initPublisher('publisher', {
+        insertMode: 'replace',
+        width: '100%',
+        height: '100%',
+        style: { buttonDisplayMode: 'off' },
+        name: 'You',
+      });
+      sessionRef.current.publish(cameraPublisher);
+      publisherRef.current = cameraPublisher;
+      setScreenSharing(false);
+    } else {
+      // Start screen sharing
+      try {
+        const screenPublisher = OT.initPublisher('publisher', {
+          insertMode: 'replace',
+          width: '100%',
+          height: '100%',
+          videoSource: 'screen',
+          publishAudio: true,
+          style: { buttonDisplayMode: 'off' },
+        });
+
+        screenPublisher.on('accessDenied', () => {
+          console.warn('Screen sharing access denied');
+          setScreenSharing(false);
+        });
+
+        screenPublisher.on('destroyed', () => {
+          // Screen share ended by user (e.g., browser stop button)
+          if (screenSharingPublisherRef.current) {
+            screenSharingPublisherRef.current = null;
+            const cameraPublisher = OT.initPublisher('publisher', {
+              insertMode: 'replace',
+              width: '100%',
+              height: '100%',
+              style: { buttonDisplayMode: 'off' },
+              name: 'You',
+            });
+            sessionRef.current?.publish(cameraPublisher);
+            publisherRef.current = cameraPublisher;
+            setScreenSharing(false);
+          }
+        });
+
+        sessionRef.current.unpublish(publisherRef.current);
+        sessionRef.current.publish(screenPublisher);
+        screenSharingPublisherRef.current = screenPublisher;
+        publisherRef.current = screenPublisher;
+        setScreenSharing(true);
+      } catch (err) {
+        console.error('Failed to start screen sharing:', err);
+        setScreenSharing(false);
+      }
+    }
+  };
+
+  const handleToggleCaptions = async () => {
+    const { captionsId } = useSessionStore.getState();
+    if (captionsId) {
+      try {
+        await fetch(`${API_URL}/api/video/session/${room}/${captionsId}/disableCaptions`, { method: 'POST' });
+        setCaptionsId(null);
+      } catch (err) {
+        console.error('Failed to disable captions:', err);
+      }
+    } else {
+      try {
+        const res = await fetch(`${API_URL}/api/video/session/${room}/enableCaptions`, { method: 'POST' });
+        const data = await res.json();
+        if (data.captionsId) {
+          setCaptionsId(data.captionsId);
+        }
+      } catch (err) {
+        console.error('Failed to enable captions:', err);
+      }
+    }
+  };
+
+  return (
+    <div className="flex flex-col h-full">
+      <div className="flex-1 flex">
+        {/* Video Grid */}
+        <div className="flex-1 p-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 h-full">
+            {/* Local Publisher */}
+            <div className="relative bg-gray-900 rounded-xl overflow-hidden aspect-video">
+              <div id="publisher" className="w-full h-full" />
+              <div className="absolute bottom-3 left-3 bg-black/50 text-white text-sm px-2 py-1 rounded">
+                You
+              </div>
+            </div>
+
+            {/* Remote Subscribers */}
+            {participants.map((p) => (
+              <div key={p.id} className="relative bg-gray-900 rounded-xl overflow-hidden aspect-video">
+                <div
+                  ref={(el) => setSubscriberRef(p.id, el)}
+                  id={`subscriber-${p.id}`}
+                  className="w-full h-full"
+                />
+                <div className="absolute bottom-3 left-3 bg-black/50 text-white text-sm px-2 py-1 rounded">
+                  {p.stream?.name || 'Participant'}
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Side Panels */}
+        {isParticipantsOpen && (
+          <div className="w-80 border-l border-beige-100 bg-white">
+            <ParticipantList participants={participants} />
+          </div>
+        )}
+        {isChatOpen && (
+          <div className="w-80 border-l border-beige-100 bg-white">
+            <ChatPanel session={sessionRef.current} />
+          </div>
+        )}
+      </div>
+
+      {/* Controls */}
+      <VideoControls
+        room={room}
+        onLeave={onLeave}
+        onStartRecording={handleStartRecording}
+        onStopRecording={handleStopRecording}
+        publisherRef={publisherRef}
+        onToggleScreenShare={handleToggleScreenShare}
+        onToggleCaptions={handleToggleCaptions}
+      />
+    </div>
+  );
+}
+</file>
+
+</files>

@@ -15,27 +15,21 @@ services:
         value: https://techub-comms.onrender.com
       - key: DATABASE_URL
         value: postgresql://techub_communications_app_user:vyuCmWOhx1KuyG6PshbsoAFRXFEduKKQ@dpg-d8lpuureo5us7387vtag-a.oregon-postgres.render.com/techub_communications_app
-      - key: VONAGE_API_KEY
-        sync: false
-      - key: VONAGE_API_SECRET
-        sync: false
-      - key: VONAGE_APPLICATION_ID
-        sync: false
-      - key: VONAGE_PRIVATE_KEY_B64
-        sync: false
-      - key: VONAGE_NUMBER
-        sync: false
-      - key: VONAGE_MONITORING_TOKEN
-        sync: false
-      - key: VONAGE_RECORDING_TOKEN
-        sync: false
-      - key: VONAGE_BROADCAST_TOKEN
-        sync: false
-      - key: VONAGE_COMPOSER_TOKEN
-        sync: false
-      - key: VONAGE_CAPTIONS_TOKEN
-        sync: false
-      - key: VONAGE_SIP_MONITORING_TOKEN
+      - key: AGORA_APP_ID
+        value: "41200037042"
+      - key: AGORA_APP_KEY
+        value: "41200037042#200051503"
+      - key: AGORA_ORG_NAME
+        value: "41200037042"
+      - key: AGORA_APP_NAME
+        value: "200051503"
+      - key: AGORA_REST_API
+        value: "a41.chat.agora.io"
+      - key: AGORA_CHAT_APP_TOKEN
+        value: "007eJxTYHi6yGWlUAv/30fTS5Zv/7D+ySPn7btm1zG/Sl26wW3umx9mCgyJhmmGqUkWxoaJKeYmqYnJSammaQaJxqmG5kap5kmJad+8dLIaAhkZ5MPEGBgZWIGYiQHEZ2AAALyxIVU="
+      - key: AGORA_CHAT_USER_TOKEN
+        value: "007eJxTYDC+ojchac21HLMzenZCAhU9n+dpyKrIepZG6pvNk+lzvaDAkGiYZpiaZGFsmJhibpKamJyUappmkGicamhulGqelJj23ksnqyGQkWFxqC0LIwMrAyMQgvgqDBYpKSYmqSkGumZmFpa6hkBzdBOTLE10U5LSjMxNjc1Mk5JMAGfVJPw="
+      - key: AGORA_APP_CERTIFICATE
         sync: false
     healthCheckPath: /health
     autoDeploy: true

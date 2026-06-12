@@ -1,14 +1,18 @@
 use reqwest::Client;
 use serde_json::{json, Value};
 use shared_core::AppConfig;
+use base64::Engine;
 
 #[derive(Clone)]
 pub struct VoiceService {
     client: Client,
     app_id: String,
-    private_key: String,
+    app_key: String,
+    org_name: String,
+    app_name: String,
+    rest_api: String,
+    app_token: String,
     base_url: String,
-    vonage_number: String,
 }
 
 impl VoiceService {
@@ -18,79 +22,69 @@ impl VoiceService {
                 .timeout(std::time::Duration::from_secs(30))
                 .build()
                 .expect("Failed to create HTTP client"),
-            app_id: config.vonage_application_id.clone(),
-            private_key: config.vonage_private_key.clone(),
+            app_id: config.agora_app_id.clone(),
+            app_key: config.agora_app_key.clone(),
+            org_name: config.agora_org_name.clone(),
+            app_name: config.agora_app_name.clone(),
+            rest_api: config.agora_rest_api.clone(),
+            app_token: config.agora_chat_app_token.clone(),
             base_url: config.base_url.clone(),
-            vonage_number: config.vonage_number.clone(),
         }
     }
 
-    fn jwt(&self) -> Result<String, String> {
-        use jsonwebtoken::{encode, Header, EncodingKey};
-        use chrono::Utc;
-        let now = Utc::now();
-        let claims = json!({
-            "iss": self.app_id,
-            "exp": (now + chrono::Duration::hours(1)).timestamp(),
-            "iat": now.timestamp(),
-        });
-        let key = EncodingKey::from_rsa_pem(self.private_key.as_bytes())
-            .map_err(|e| format!("JWT key error: {}", e))?;
-        encode(&Header::new(jsonwebtoken::Algorithm::RS256), &claims, &key)
-            .map_err(|e| format!("JWT encode error: {}", e))
+    fn auth_header(&self) -> String {
+        format!("Bearer {}", self.app_token)
     }
 
-    pub async fn create_outbound_call(
-        &self, to: &str, from: &str, ncco: Vec<Value>,
-        answer_url: Option<String>, event_url: Option<String>,
-    ) -> Result<Value, String> {
-        let jwt = self.jwt()?;
-        let mut payload = json!({
-            "to": [{ "type": "phone", "number": to }],
-            "from": { "type": "phone", "number": from },
-        });
-        if !ncco.is_empty() { payload["ncco"] = json!(ncco); }
-        if let Some(u) = answer_url { payload["answer_url"] = json!([u]); payload["answer_method"] = json!("POST"); }
-        if let Some(u) = event_url { payload["event_url"] = json!([u]); payload["event_method"] = json!("POST"); }
-
-        let resp = self.client.post("https://rest.nexmo.com/v1/calls")
-            .bearer_auth(&jwt).json(&payload)
+    // Create Agora Chat user for voice messaging
+    pub async fn create_user(&self, username: &str, password: &str) -> Result<Value, String> {
+        let url = format!("https://{}/{}/users", self.rest_api, self.app_name);
+        
+        let resp = self.client.post(&url)
+            .header("Authorization", self.auth_header())
+            .header("Content-Type", "application/json")
+            .json(&json!({
+                "user": username,
+                "password": password
+            }))
             .send().await.map_err(|e| e.to_string())?;
+        
         resp.json().await.map_err(|e| e.to_string())
     }
 
-    pub async fn modify_call(&self, uuid: &str, action: &str) -> Result<Value, String> {
-        let jwt = self.jwt()?;
-        let resp = self.client.put(format!("https://rest.nexmo.com/v1/calls/{}", uuid))
-            .bearer_auth(&jwt).json(&json!({ "action": action }))
+    // Send signaling message for voice call
+    pub async fn send_call_signal(&self, from: &str, to: &str, signal_type: &str) -> Result<Value, String> {
+        let url = format!("https://{}/{}/messages", self.rest_api, self.app_name);
+        
+        let resp = self.client.post(&url)
+            .header("Authorization", self.auth_header())
+            .header("Content-Type", "application/json")
+            .json(&json!({
+                "from": from,
+                "to": [to],
+                "type": "txt",
+                "msg": format!("{}:call", signal_type)
+            }))
             .send().await.map_err(|e| e.to_string())?;
+        
         resp.json().await.map_err(|e| e.to_string())
     }
 
-    pub async fn play_tts(&self, uuid: &str, text: &str, language: &str, voice_name: &str) -> Result<Value, String> {
-        let jwt = self.jwt()?;
-        let resp = self.client.put(format!("https://rest.nexmo.com/v1/calls/{}/talk", uuid))
-            .bearer_auth(&jwt).json(&json!({ "text": text, "language": language, "voice_name": voice_name, "level": 0, "loop": 1 }))
-            .send().await.map_err(|e| e.to_string())?;
-        resp.json().await.map_err(|e| e.to_string())
+    // Create voice call room
+    pub async fn create_call_room(&self, room_name: &str) -> Result<Value, String> {
+        // Agora uses channels - no pre-creation needed
+        Ok(json!({
+            "channelName": room_name,
+            "appId": self.app_id,
+            "status": "ready"
+        }))
     }
 
-    pub async fn stop_tts(&self, uuid: &str) -> Result<Value, String> {
-        let jwt = self.jwt()?;
-        let resp = self.client.delete(format!("https://rest.nexmo.com/v1/calls/{}/talk", uuid))
-            .bearer_auth(&jwt)
-            .send().await.map_err(|e| e.to_string())?;
-        resp.json().await.map_err(|e| e.to_string())
+    pub fn base_url(&self) -> &str {
+        &self.base_url
     }
 
-    pub async fn send_dtmf(&self, uuid: &str, digits: &str) -> Result<Value, String> {
-        let jwt = self.jwt()?;
-        let resp = self.client.put(format!("https://rest.nexmo.com/v1/calls/{}/dtmf", uuid))
-            .bearer_auth(&jwt).json(&json!({ "digits": digits }))
-            .send().await.map_err(|e| e.to_string())?;
-        resp.json().await.map_err(|e| e.to_string())
+    pub fn agora_app_id(&self) -> &str {
+        &self.app_id
     }
-
-    pub fn base_url(&self) -> &str { &self.base_url }
-    pub fn vonage_number(&self) -> &str { &self.vonage_number }
 }

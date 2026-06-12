@@ -5,65 +5,56 @@ use crate::AppState;
 use crate::security::validation;
 
 #[derive(Deserialize)]
-pub struct MsgReq {
+pub struct TextMsgReq {
+    pub from: String,
     pub to: String,
-    #[serde(default)] pub from: String,
-    #[serde(default)] pub text: String,
-    #[serde(default)] pub media_url: Vec<String>,
+    pub content: String,
+}
+
+#[derive(Deserialize)]
+pub struct ImageMsgReq {
+    pub from: String,
+    pub to: String,
+    pub image_url: String,
+}
+
+#[derive(Deserialize)]
+pub struct GroupReq {
+    pub owner: String,
+    pub group_name: String,
+    #[serde(default)] pub members: Vec<String>,
 }
 
 pub fn configure(cfg: &mut web::ServiceConfig) {
     cfg.service(web::scope("/api/message")
-        .route("/send", web::post().to(send_sms))
-        .route("/send-mms", web::post().to(send_mms))
-        .route("/send-whatsapp", web::post().to(send_whatsapp))
+        .route("/send", web::post().to(send_text))
+        .route("/send-image", web::post().to(send_image))
+        .route("/group", web::post().to(create_group))
     );
 }
 
-async fn send_sms(body: web::Json<MsgReq>, data: web::Data<AppState>) -> HttpResponse {
-    if let Err(e) = validation::phone(&body.to) { return HttpResponse::BadRequest().json(json!({"error": e})); }
-    let text = match validation::sanitize(&body.text) {
+async fn send_text(body: web::Json<TextMsgReq>, data: web::Data<AppState>) -> HttpResponse {
+    let content = match validation::sanitize(&body.content) {
         Ok(t) => t,
         Err(e) => return HttpResponse::BadRequest().json(json!({"error": e})),
     };
-    let from = if body.from.is_empty() { data.message.vonage_number() } else { &body.from };
-    match data.message.send_sms(&body.to, from, &text).await {
-        Ok(r) => {
-            let mid = r["messages"][0]["message-id"].as_str().unwrap_or("unknown");
-            HttpResponse::Ok().json(json!({"messageId": mid, "status": "sent"}))
-        }
+
+    match data.message.send_text_message(&body.from, &body.to, &content).await {
+        Ok(result) => HttpResponse::Ok().json(result),
         Err(e) => HttpResponse::InternalServerError().json(json!({"error": e})),
     }
 }
 
-async fn send_mms(body: web::Json<MsgReq>, data: web::Data<AppState>) -> HttpResponse {
-    if let Err(e) = validation::phone(&body.to) { return HttpResponse::BadRequest().json(json!({"error": e})); }
-    let text = match validation::sanitize(&body.text) {
-        Ok(t) => t,
-        Err(e) => return HttpResponse::BadRequest().json(json!({"error": e})),
-    };
-    let from = if body.from.is_empty() { data.message.vonage_number() } else { &body.from };
-    match data.message.send_mms(&body.to, from, &text, &body.media_url).await {
-        Ok(r) => {
-            let mid = r["messages"][0]["message-id"].as_str().unwrap_or("unknown");
-            HttpResponse::Ok().json(json!({"messageId": mid, "status": "sent"}))
-        }
+async fn send_image(body: web::Json<ImageMsgReq>, data: web::Data<AppState>) -> HttpResponse {
+    match data.message.send_image_message(&body.from, &body.to, &body.image_url).await {
+        Ok(result) => HttpResponse::Ok().json(result),
         Err(e) => HttpResponse::InternalServerError().json(json!({"error": e})),
     }
 }
 
-async fn send_whatsapp(body: web::Json<MsgReq>, data: web::Data<AppState>) -> HttpResponse {
-    if let Err(e) = validation::phone(&body.to) { return HttpResponse::BadRequest().json(json!({"error": e})); }
-    let text = match validation::sanitize(&body.text) {
-        Ok(t) => t,
-        Err(e) => return HttpResponse::BadRequest().json(json!({"error": e})),
-    };
-    let from = if body.from.is_empty() { data.message.vonage_number() } else { &body.from };
-    match data.message.send_whatsapp(&body.to, from, &text).await {
-        Ok(r) => {
-            let mid = r["messages"][0]["message-id"].as_str().unwrap_or("unknown");
-            HttpResponse::Ok().json(json!({"messageId": mid, "status": "sent"}))
-        }
+async fn create_group(body: web::Json<GroupReq>, data: web::Data<AppState>) -> HttpResponse {
+    match data.message.create_group(&body.owner, &body.group_name, &body.members).await {
+        Ok(result) => HttpResponse::Ok().json(result),
         Err(e) => HttpResponse::InternalServerError().json(json!({"error": e})),
     }
 }

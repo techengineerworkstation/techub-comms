@@ -1,6 +1,5 @@
 use leptos::*;
 use wasm_bindgen_futures::spawn_local;
-use crate::api;
 use crate::components::video_controls::VideoControls;
 use crate::components::chat_panel::ChatPanel;
 use crate::components::participant_list::ParticipantList;
@@ -15,14 +14,13 @@ pub struct Participant {
 
 #[component]
 pub fn VideoRoom(
-    room: String,
-    session_id: String,
+    channel: String,
     token: String,
-    api_key: String,
+    app_id: String,
+    uid: u32,
     on_leave: impl Fn() + 'static + Clone,
 ) -> impl IntoView {
     let (is_recording, set_recording) = create_signal(false);
-    let (captions_id, set_captions_id) = create_signal(None::<String>);
     let (is_chat_open, set_chat_open) = create_signal(false);
     let (is_participants_open, set_participants_open) = create_signal(false);
     let (is_muted, set_muted) = create_signal(false);
@@ -32,13 +30,15 @@ pub fn VideoRoom(
         Participant { id: "local".into(), name: "You".into(), has_video: true, has_audio: true },
     ]).0;
 
-    let _room_clone = room.clone();
+    let _channel = channel.clone();
+    let _token = token.clone();
+    let _app_id = app_id.clone();
     spawn_local(async move {
-        log::info!("Session ready");
+        log::info!("Agora channel ready: {}", _channel);
     });
 
     let on_leave_clone = on_leave.clone();
-    let room_for_controls = room.clone();
+    let channel_for_controls = channel.clone();
 
     view! {
         <div class="flex flex-col h-full animate-page-enter">
@@ -46,13 +46,14 @@ pub fn VideoRoom(
                 <div class="flex-1 p-4 overflow-auto">
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 h-full auto-rows-fr">
                         <div class="relative bg-gray-900 rounded-xl overflow-hidden aspect-video glow-card animate-video-enter">
-                            <div id="publisher" class="w-full h-full flex items-center justify-center">
+                            <div id="agora-local" class="w-full h-full flex items-center justify-center">
                                 <div class="text-center">
                                     <div class="w-20 h-20 mx-auto rounded-full flex items-center justify-center text-white text-3xl font-bold mb-3"
                                         style="background: linear-gradient(135deg, #009999, #005c5c)">
                                         "U"
                                     </div>
-                                    <p class="text-white text-sm opacity-75">"Camera initializing..."</p>
+                                    <p class="text-white text-sm opacity-75">"Agora Video"</p>
+                                    <p class="text-white text-xs opacity-50 mt-1">{format!("Channel: {}", channel)}</p>
                                 </div>
                             </div>
                             <div class="absolute bottom-3 left-3 bg-black/50 backdrop-blur-sm text-white text-sm px-3 py-1.5 rounded-lg flex items-center gap-2">
@@ -107,9 +108,7 @@ pub fn VideoRoom(
                 set_chat_open=set_chat_open
                 is_participants_open=is_participants_open
                 set_participants_open=set_participants_open
-                captions_id=captions_id
-                set_captions_id=set_captions_id
-                room=room_for_controls
+                channel=channel_for_controls
                 on_leave=on_leave_clone
             />
         </div>

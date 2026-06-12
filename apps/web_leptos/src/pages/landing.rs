@@ -1,5 +1,7 @@
 use leptos::*;
 use leptos_router::*;
+use wasm_bindgen_futures::spawn_local;
+use crate::api;
 
 #[component]
 pub fn LandingPage() -> impl IntoView {
@@ -9,7 +11,7 @@ pub fn LandingPage() -> impl IntoView {
     let actions = vec![
         ("Start Video Call", "\u{1F4F9}", "from-teal-500 to-teal-600", "High-quality video conferencing"),
         ("Voice Call", "\u{1F4DE}", "from-beige-400 to-beige-600", "Crystal clear voice calls"),
-        ("Send Text", "\u{1F4AC}", "from-teal-600 to-teal-700", "SMS, WhatsApp, and MMS"),
+        ("Send Text", "\u{1F4AC}", "from-teal-600 to-teal-700", "Agora Chat messaging"),
         ("Group Meeting", "\u{1F465}", "from-beige-500 to-beige-700", "Team collaboration rooms"),
     ];
 
@@ -33,7 +35,7 @@ pub fn LandingPage() -> impl IntoView {
                     </div>
                     <div>
                         <h2 class="text-xl font-semibold text-gray-900">"Join a Meeting"</h2>
-                        <p class="text-sm text-gray-500">"Enter a room name to join or create a meeting"</p>
+                        <p class="text-sm text-gray-500">"Enter a channel name to join or create a meeting"</p>
                     </div>
                 </div>
 
@@ -48,13 +50,13 @@ pub fn LandingPage() -> impl IntoView {
                     }
                 } class="flex gap-4">
                     <input type="text"
-                        placeholder="Enter room name..."
+                        placeholder="Enter channel name..."
                         prop:value=room_name
                         on:input=move |ev| set_room_name.set(event_target_value(&ev))
                         class="input flex-1 text-base"
                     />
                     <button type="submit" class="btn-primary px-8 text-base">
-                        "Join Room"
+                        "Join Channel"
                     </button>
                 </form>
             </div>
@@ -68,7 +70,7 @@ pub fn LandingPage() -> impl IntoView {
                             class="glow-card p-6 text-left group cursor-pointer"
                             on:click=move |_| {
                                 let path = if lbl == "Start Video Call" {
-                                    format!("/meeting/room-{}", (js_sys::Date::now() as u64) % 100000)
+                                    format!("/meeting/channel-{}", (js_sys::Date::now() as u64) % 100000)
                                 } else if lbl == "Voice Call" { "/voice".to_string() }
                                 else if lbl == "Send Text" { "/messages".to_string() }
                                 else { "/meeting/team-standup".to_string() };
@@ -98,8 +100,8 @@ pub fn LandingPage() -> impl IntoView {
                     <p class="text-xs text-gray-500 mt-1">"Encryption"</p>
                 </div>
                 <div class="glow-card p-4 text-center">
-                    <p class="text-2xl font-bold metallic-text">"6+"</p>
-                    <p class="text-xs text-gray-500 mt-1">"Participants"</p>
+                    <p class="text-2xl font-bold metallic-text">"17K+"</p>
+                    <p class="text-xs text-gray-500 mt-1">"Free Minutes"</p>
                 </div>
                 <div class="glow-card p-4 text-center">
                     <p class="text-2xl font-bold metallic-text">"24/7"</p>
