@@ -9,7 +9,6 @@
     "beforeBuildCommand": "npm run build"
   },
   "app": {
-    "title": "Techub Comms",
     "windows": [
       {
         "title": "Techub Comms — Enterprise Communications",
