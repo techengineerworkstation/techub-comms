@@ -8,7 +8,7 @@ use actix_cors::Cors;
 use actix_web::{web, App, HttpServer, HttpResponse, middleware::Logger};
 use actix_files as fs;
 use shared_core::AppConfig;
-use services::{VideoService, VoiceService, MessageService};
+use services::{VideoService, VoiceService, MessageService, PstnService};
 use security::rate_limit::RateLimiter;
 use security::headers::SecurityHeaders;
 use sqlx::PgPool;
@@ -18,6 +18,7 @@ pub struct AppState {
     pub video: VideoService,
     pub voice: VoiceService,
     pub message: MessageService,
+    pub pstn: PstnService,
     pub db: PgPool,
 }
 
@@ -52,7 +53,6 @@ async fn main() -> std::io::Result<()> {
         }
         Err(e) => {
             log::warn!("PostgreSQL connection failed: {}. Running without database.", e);
-            // Create a dummy pool - app can still work for static files
             sqlx::postgres::PgPoolOptions::new()
                 .max_connections(1)
                 .connect(&database_url)
@@ -64,12 +64,14 @@ async fn main() -> std::io::Result<()> {
     let video = VideoService::new(&config);
     let voice = VoiceService::new(&config);
     let message = MessageService::new(&config);
+    let pstn = PstnService::new(&config);
 
     let state = web::Data::new(AppState {
         config,
         video,
         voice,
         message,
+        pstn,
         db: db_pool.clone(),
     });
 
@@ -79,6 +81,8 @@ async fn main() -> std::io::Result<()> {
         let cors = Cors::default()
             .allowed_origin(&frontend_url)
             .allowed_origin("https://thbtechub.sbs")
+            .allowed_origin("https://www.thbtechub.sbs")
+            .allowed_origin("https://api.thbtechub.sbs")
             .allowed_origin("https://techub-comms.onrender.com")
             .allowed_methods(["GET", "POST", "PUT", "DELETE", "OPTIONS"])
             .allowed_headers([
@@ -115,8 +119,9 @@ async fn main() -> std::io::Result<()> {
             .configure(routes::video::configure)
             .configure(routes::voice::configure)
             .configure(routes::messages::configure)
+            .configure(routes::pstn::configure)
             .configure(routes::webhooks::configure)
-            // Static files with index file support
+            // Static files
             .service(
                 fs::Files::new("/", "./static")
                     .index_file("index.html")

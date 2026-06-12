@@ -142,3 +142,48 @@ pub async fn send_image_message(from: &str, to: &str, image_url: &str) -> Result
         "image_url": image_url
     })).await
 }
+
+// ─── PSTN API Functions ──────────────────────────────────────────
+
+#[derive(serde::Deserialize, Clone)]
+pub struct PstnOutboundResp {
+    pub success: bool,
+    #[serde(rename = "callId")]
+    pub call_id: Option<String>,
+    pub reason: Option<String>,
+}
+
+#[derive(serde::Deserialize, Clone)]
+pub struct PstnInboundResp {
+    pub did: String,
+    pub display: String,
+    pub pin: String,
+}
+
+pub async fn pstn_outbound_call(
+    to: &str,
+    from: &str,
+    channel: &str,
+    region: &str,
+) -> Result<PstnOutboundResp, String> {
+    fetch_post("/api/pstn/outbound", &serde_json::json!({
+        "to": to,
+        "from": from,
+        "channel": channel,
+        "region": region,
+        "prompt": "true"
+    })).await
+}
+
+pub async fn pstn_inbound(channel: &str, region: &str) -> Result<PstnInboundResp, String> {
+    fetch_post("/api/pstn/inbound", &serde_json::json!({
+        "channel": channel,
+        "region": region
+    })).await
+}
+
+pub async fn pstn_end_call(call_id: &str) -> Result<GenericResp, String> {
+    fetch_post("/api/pstn/end", &serde_json::json!({
+        "call_id": call_id
+    })).await
+}

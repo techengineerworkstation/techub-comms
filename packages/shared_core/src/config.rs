@@ -11,6 +11,8 @@ pub struct AppConfig {
     pub agora_rest_api: String,
     pub agora_chat_app_token: String,
     pub agora_chat_user_token: String,
+    // Agora SIP/PSTN
+    pub agora_sip_auth_token: String,
     // Server config
     pub server_port: u16,
     pub base_url: String,
@@ -37,6 +39,8 @@ impl AppConfig {
                 .unwrap_or_else(|_| "007eJxTYHi6yGWlUAv/30fTS5Zv/7D+ySPn7btm1zG/Sl26wW3umx9mCgyJhmmGqUkWxoaJKeYmqYnJSammaQaJxqmG5kap5kmJad+8dLIaAhkZ5MPEGBgZWIGYiQHEZ2AAALyxIVU=".to_string()),
             agora_chat_user_token: env::var("AGORA_CHAT_USER_TOKEN")
                 .unwrap_or_else(|_| "007eJxTYDC+ojchac21HLMzenZCAhU9n+dpyKrIepZG6pvNk+lzvaDAkGiYZpiaZGFsmJhibpKamJyUappmkGicamhulGqelJj23ksnqyGQkWFxqC0LIwMrAyMQgvgqDBYpKSYmqSkGumZmFpa6hkBzdBOTLE10U5LSjMxNjc1Mk5JMAGfVJPw=".to_string()),
+            agora_sip_auth_token: env::var("AGORA_SIP_AUTH_TOKEN")
+                .unwrap_or_default(),
             server_port: env::var("PORT")
                 .unwrap_or_else(|_| "3039".to_string())
                 .parse()
