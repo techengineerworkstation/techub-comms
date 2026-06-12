@@ -3,7 +3,7 @@ mod security;
 mod services;
 
 use actix_cors::Cors;
-use actix_web::{web, App, HttpServer, HttpResponse, middleware::Logger};
+use actix_web::{web, App, HttpServer, HttpResponse, HttpRequest, middleware::Logger};
 use actix_files as fs;
 use shared_core::AppConfig;
 use services::{VideoService, VoiceService, MessageService};
@@ -23,6 +23,10 @@ async fn health() -> HttpResponse {
         "timestamp": chrono::Utc::now().to_rfc3339(),
         "version": env!("CARGO_PKG_VERSION")
     }))
+}
+
+async fn spa_fallback(_req: HttpRequest) -> actix_web::Result<fs::NamedFile> {
+    Ok(fs::NamedFile::open("./static/index.html")?)
 }
 
 #[actix_web::main]
@@ -82,16 +86,14 @@ async fn main() -> std::io::Result<()> {
             .configure(routes::voice::configure)
             .configure(routes::messages::configure)
             .configure(routes::webhooks::configure)
-            // Static files for Leptos WASM frontend
+            // Static files - serve actual files with correct MIME types
             .service(
                 fs::Files::new("/", "./static")
-                    .index_file("index.html")
-                    .default_handler(
-                        // SPA fallback: serve index.html for any non-file route
-                        fs::NamedFile::open("./static/index.html")
-                            .expect("static/index.html not found — run trunk build first")
-                    )
+                    .prefer_utf8(true)
+                    .use_last_modified(true)
             )
+            // SPA fallback for client-side routing (only for non-file routes)
+            .default_service(web::to(spa_fallback))
     })
     .bind(("0.0.0.0", port))?
     .workers(num_cpus::get().max(2))
