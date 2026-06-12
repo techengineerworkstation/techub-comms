@@ -3,7 +3,7 @@ mod security;
 mod services;
 
 use actix_cors::Cors;
-use actix_web::{web, App, HttpServer, HttpResponse, HttpRequest, middleware::Logger};
+use actix_web::{web, App, HttpServer, HttpResponse, middleware::Logger};
 use actix_files as fs;
 use shared_core::AppConfig;
 use services::{VideoService, VoiceService, MessageService};
@@ -23,10 +23,6 @@ async fn health() -> HttpResponse {
         "timestamp": chrono::Utc::now().to_rfc3339(),
         "version": env!("CARGO_PKG_VERSION")
     }))
-}
-
-async fn index(_req: HttpRequest) -> actix_web::Result<fs::NamedFile> {
-    Ok(fs::NamedFile::open("./static/index.html")?)
 }
 
 #[actix_web::main]
@@ -85,11 +81,10 @@ async fn main() -> std::io::Result<()> {
             .configure(routes::voice::configure)
             .configure(routes::messages::configure)
             .configure(routes::webhooks::configure)
-            // Serve index.html at root
-            .route("/", web::get().to(index))
-            // Static files with correct MIME types
+            // Static files with index file support
             .service(
                 fs::Files::new("/", "./static")
+                    .index_file("index.html")
                     .prefer_utf8(true)
             )
     })
