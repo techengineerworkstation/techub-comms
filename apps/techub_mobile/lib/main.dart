@@ -93,7 +93,7 @@ class _MainNavigationState extends State<MainNavigation> {
             NavigationDestination(
               icon: Icon(Icons.chat_outlined, color: AppTheme.metallicDark),
               selectedIcon: Icon(Icons.chat, color: AppTheme.teal600),
-              label: 'Messages',
+              label: 'Texts',
             ),
             NavigationDestination(
               icon: Icon(Icons.folder_outlined, color: AppTheme.metallicDark),

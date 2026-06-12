@@ -87,7 +87,7 @@ class HomeScreen extends StatelessWidget {
             const SizedBox(height: 12),
             Row(
               children: [
-                Expanded(child: _ActionCard(icon: Icons.chat, label: 'Message', color: AppTheme.teal600, onTap: () {})),
+                Expanded(child: _ActionCard(icon: Icons.chat, label: 'Text', color: AppTheme.teal600, onTap: () {})),
                 const SizedBox(width: 12),
                 Expanded(child: _ActionCard(icon: Icons.group, label: 'Meeting', color: AppTheme.metallicGold, onTap: () {})),
               ],

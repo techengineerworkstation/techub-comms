@@ -16,7 +16,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Messages')),
+      appBar: AppBar(title: const Text('Texts')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
@@ -45,7 +45,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text('Send a Message', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
+                  const Text('Send a Text', style: TextStyle(fontSize: 16, fontWeight: FontWeight.w600)),
                   const SizedBox(height: 16),
                   TextField(
                     controller: _toController,
@@ -55,7 +55,7 @@ class _MessagesScreenState extends State<MessagesScreen> {
                   const SizedBox(height: 12),
                   TextField(
                     controller: _messageController,
-                    decoration: const InputDecoration(labelText: 'Message', hintText: 'Type your message...'),
+                    decoration: const InputDecoration(labelText: 'Text', hintText: 'Type your text...'),
                     maxLines: 4,
                   ),
                   const SizedBox(height: 16),

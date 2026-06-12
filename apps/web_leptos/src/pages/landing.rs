@@ -9,7 +9,7 @@ pub fn LandingPage() -> impl IntoView {
     let actions = vec![
         ("Start Video Call", "\u{1F4F9}", "from-teal-500 to-teal-600", "High-quality video conferencing"),
         ("Voice Call", "\u{1F4DE}", "from-beige-400 to-beige-600", "Crystal clear voice calls"),
-        ("Send Message", "\u{1F4AC}", "from-teal-600 to-teal-700", "SMS, WhatsApp, and MMS"),
+        ("Send Text", "\u{1F4AC}", "from-teal-600 to-teal-700", "SMS, WhatsApp, and MMS"),
         ("Group Meeting", "\u{1F465}", "from-beige-500 to-beige-700", "Team collaboration rooms"),
     ];
 
@@ -70,7 +70,7 @@ pub fn LandingPage() -> impl IntoView {
                                 let path = if lbl == "Start Video Call" {
                                     format!("/meeting/room-{}", (js_sys::Date::now() as u64) % 100000)
                                 } else if lbl == "Voice Call" { "/voice".to_string() }
-                                else if lbl == "Send Message" { "/messages".to_string() }
+                                else if lbl == "Send Text" { "/messages".to_string() }
                                 else { "/meeting/team-standup".to_string() };
                                 nav(&path, Default::default());
                             }

@@ -24,14 +24,14 @@ pub fn MessagesPage() -> impl IntoView {
                     <span class="text-2xl">"\u{1F4AC}"</span>
                 </div>
                 <div>
-                    <h1 class="text-3xl font-bold text-gray-900">"Messages"</h1>
-                    <p class="text-sm text-gray-500">"Send SMS, WhatsApp, and MMS messages"</p>
+                    <h1 class="text-3xl font-bold text-gray-900">"Texts"</h1>
+                    <p class="text-sm text-gray-500">"Send SMS, WhatsApp, and MMS texts"</p>
                 </div>
             </div>
 
             <div class="glow-card p-8 animate-fade-in-up">
                 <h2 class="text-xl font-semibold mb-6 flex items-center gap-2">
-                    <span>"\u{2709}"</span> "Send a Message"
+                    <span>"\u{2709}"</span> "Send a Text"
                 </h2>
 
                 <div class="flex gap-2 mb-6">
@@ -71,7 +71,7 @@ pub fn MessagesPage() -> impl IntoView {
                         };
                         match r {
                             Ok(r) => {
-                                set_status.set(Some(format!("Message sent! ID: {}", r.message_id)));
+                                set_status.set(Some(format!("Text sent! ID: {}", r.message_id)));
                                 set_text.set(String::new());
                             }
                             Err(e) => set_status.set(Some(format!("Error: {}", e))),
@@ -90,9 +90,9 @@ pub fn MessagesPage() -> impl IntoView {
                         />
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-1.5">"Message"</label>
+                        <label class="block text-sm font-medium text-gray-700 mb-1.5">"Text"</label>
                         <textarea
-                            placeholder="Type your message..."
+                            placeholder="Type your text..."
                             prop:value=text
                             on:input=move |ev| set_text.set(event_target_value(&ev))
                             class="input min-h-[120px]"
@@ -106,7 +106,7 @@ pub fn MessagesPage() -> impl IntoView {
                         {move || if sending.get() {
                             view! { <span class="animate-spin">"\u{1F504}"</span> <span>"Sending..."</span> }.into_view()
                         } else {
-                            view! { <span>"Send Message"</span> }.into_view()
+                            view! { <span>"Send Text"</span> }.into_view()
                         }}
                     </button>
                 </form>

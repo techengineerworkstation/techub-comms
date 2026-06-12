@@ -29,7 +29,7 @@ techub-comms/
 | **Desktop** | Tauri 2 (Rust + WebView) |
 | **Mobile** | React Native / Expo |
 | **Theme** | Metallic Beige Tanned Turquoise |
-| **API** | Vonage Video, Voice, Messages |
+| **API** | Vonage Video, Voice, Texts |
 | **Deployment** | Docker, Render, GitHub Actions |
 
 ## Quick Start

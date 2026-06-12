@@ -55,7 +55,7 @@ pub fn Header() -> impl IntoView {
                     </div>
                     <div class="max-h-64 overflow-y-auto">
                         <div class="p-3 border-b border-beige-50 hover:bg-beige-50 transition-colors cursor-pointer">
-                            <p class="text-sm font-medium text-gray-900">"New message received"</p>
+                            <p class="text-sm font-medium text-gray-900">"New text received"</p>
                             <p class="text-xs text-gray-500 mt-1">"2 minutes ago"</p>
                         </div>
                         <div class="p-3 border-b border-beige-50 hover:bg-beige-50 transition-colors cursor-pointer">

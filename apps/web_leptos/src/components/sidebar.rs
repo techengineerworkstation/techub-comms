@@ -8,7 +8,7 @@ pub fn Sidebar() -> impl IntoView {
     let nav_items = vec![
         ("/", "Home", "\u{2302}", "Dashboard & quick actions"),
         ("/voice", "Voice Calls", "\u{1F4DE}", "Make & manage calls"),
-        ("/messages", "Messages", "\u{1F4AC}", "SMS, WhatsApp, MMS"),
+        ("/messages", "Texts", "\u{1F4AC}", "SMS, WhatsApp, MMS"),
         ("/recordings", "Recordings", "\u{1F4C1}", "Meeting recordings"),
     ];
 
