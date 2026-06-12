@@ -2,14 +2,14 @@
 # Techub Comms — Multi-stage Docker Build
 # ═══════════════════════════════════════════════════════════════════
 
-FROM rust:1.87-slim AS builder
+FROM rust:1.88-slim AS builder
 
 RUN apt-get update && apt-get install -y \
     pkg-config libssl-dev curl \
     && rm -rf /var/lib/apt/lists/*
 
 RUN rustup target add wasm32-unknown-unknown
-RUN cargo install trunk@0.21.15 wasm-bindgen-cli@0.2.100
+RUN cargo install --locked trunk wasm-bindgen-cli
 
 WORKDIR /app
 COPY . .
