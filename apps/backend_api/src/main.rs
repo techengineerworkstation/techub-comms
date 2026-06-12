@@ -1,6 +1,8 @@
 mod routes;
 mod security;
 mod services;
+mod db;
+mod auth;
 
 use actix_cors::Cors;
 use actix_web::{web, App, HttpServer, HttpResponse, middleware::Logger};
@@ -9,12 +11,14 @@ use shared_core::AppConfig;
 use services::{VideoService, VoiceService, MessageService};
 use security::rate_limit::RateLimiter;
 use security::headers::SecurityHeaders;
+use sqlx::PgPool;
 
 pub struct AppState {
     pub config: AppConfig,
     pub video: VideoService,
     pub voice: VoiceService,
     pub message: MessageService,
+    pub db: PgPool,
 }
 
 async fn health() -> HttpResponse {
@@ -34,11 +38,40 @@ async fn main() -> std::io::Result<()> {
     let port = config.server_port;
     let frontend_url = config.frontend_url.clone();
 
+    // Database connection
+    let database_url = std::env::var("DATABASE_URL")
+        .unwrap_or_else(|_| "postgresql://localhost/techub_comms".to_string());
+
+    let db_pool = match db::create_pool(&database_url).await {
+        Ok(pool) => {
+            log::info!("Connected to PostgreSQL");
+            if let Err(e) = db::run_migrations(&pool).await {
+                log::error!("Migration error: {}", e);
+            }
+            pool
+        }
+        Err(e) => {
+            log::warn!("PostgreSQL connection failed: {}. Running without database.", e);
+            // Create a dummy pool - app can still work for static files
+            sqlx::postgres::PgPoolOptions::new()
+                .max_connections(1)
+                .connect(&database_url)
+                .await
+                .expect("Failed to create fallback DB pool")
+        }
+    };
+
     let video = VideoService::new(&config);
     let voice = VoiceService::new(&config);
     let message = MessageService::new(&config);
 
-    let state = web::Data::new(AppState { config, video, voice, message });
+    let state = web::Data::new(AppState {
+        config,
+        video,
+        voice,
+        message,
+        db: db_pool.clone(),
+    });
 
     log::info!("Techub Comms Server starting on port {}", port);
 
@@ -46,7 +79,7 @@ async fn main() -> std::io::Result<()> {
         let cors = Cors::default()
             .allowed_origin(&frontend_url)
             .allowed_origin("https://thbtechub.sbs")
-            .allowed_origin("https://api.thbtechub.sbs")
+            .allowed_origin("https://techub-comms.onrender.com")
             .allowed_methods(["GET", "POST", "PUT", "DELETE", "OPTIONS"])
             .allowed_headers([
                 actix_web::http::header::CONTENT_TYPE,
@@ -62,6 +95,7 @@ async fn main() -> std::io::Result<()> {
             .wrap(SecurityHeaders)
             .wrap(RateLimiter::new(60, 100))
             .app_data(state.clone())
+            .app_data(web::Data::new(db_pool.clone()))
             .app_data(
                 web::JsonConfig::default()
                     .limit(10240)
@@ -77,6 +111,7 @@ async fn main() -> std::io::Result<()> {
             )
             // API routes
             .route("/health", web::get().to(health))
+            .configure(routes::auth::configure)
             .configure(routes::video::configure)
             .configure(routes::voice::configure)
             .configure(routes::messages::configure)

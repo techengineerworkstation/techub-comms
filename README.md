@@ -1,6 +1,6 @@
 # Techub Comms — Enterprise Communications Platform
 
-A multi-versatile communications platform built with **Rust** and **Leptos** (WASM), featuring voice calls, text messaging (SMS/WhatsApp/MMS), video conferencing, and recording capabilities. Powered by the Vonage Communications API.
+A multi-versatile communications platform built with **Rust** and **Leptos** (WASM), featuring voice calls, texting (SMS/WhatsApp/MMS), video conferencing, and recording capabilities. Powered by the Vonage Communications API.
 
 ## Architecture
 

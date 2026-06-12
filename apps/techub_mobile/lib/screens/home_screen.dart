@@ -57,7 +57,7 @@ class HomeScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'Connect through video, voice, and messaging',
+                    'Connect through voice, text and video',
                     style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 14),
                   ),
                   const SizedBox(height: 16),

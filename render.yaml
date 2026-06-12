@@ -1,6 +1,6 @@
 services:
   - type: web
-    name: techub-comms-app
+    name: techub-comms
     runtime: docker
     dockerfilePath: ./Dockerfile
     plan: free
@@ -10,9 +10,11 @@ services:
       - key: PORT
         value: 3039
       - key: BASE_URL
-        value: https://techub-comms-app.onrender.com
+        value: https://techub-comms.onrender.com
       - key: FRONTEND_URL
-        value: https://techub-comms-app.onrender.com
+        value: https://techub-comms.onrender.com
+      - key: DATABASE_URL
+        value: postgresql://techub_communications_app_user:vyuCmWOhx1KuyG6PshbsoAFRXFEduKKQ@dpg-d8lpuureo5us7387vtag-a.oregon-postgres.render.com/techub_communications_app
       - key: VONAGE_API_KEY
         sync: false
       - key: VONAGE_API_SECRET

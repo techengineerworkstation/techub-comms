@@ -10,7 +10,7 @@ fn api_base() -> String {
     if origin.contains("localhost") || origin.contains("127.0.0.1") {
         "http://localhost:3039".to_string()
     } else {
-        format!("{}/api", origin)
+        origin
     }
 }
 

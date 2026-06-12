@@ -21,7 +21,7 @@ pub fn LandingPage() -> impl IntoView {
                     <span class="metallic-text">"Techub Comms"</span>
                 </h1>
                 <p class="text-lg text-gray-600 max-w-2xl mx-auto">
-                    "Connect with your team through video, voice, and messaging. Enterprise-grade communications, beautifully simple."
+                    "Connect with your team through voice, text and video. Enterprise-grade communications at your utilization."
                 </p>
             </div>
 
