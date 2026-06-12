@@ -25,7 +25,7 @@ async fn health() -> HttpResponse {
     }))
 }
 
-async fn spa_fallback(_req: HttpRequest) -> actix_web::Result<fs::NamedFile> {
+async fn index(_req: HttpRequest) -> actix_web::Result<fs::NamedFile> {
     Ok(fs::NamedFile::open("./static/index.html")?)
 }
 
@@ -45,7 +45,6 @@ async fn main() -> std::io::Result<()> {
     let state = web::Data::new(AppState { config, video, voice, message });
 
     log::info!("Techub Comms Server starting on port {}", port);
-    log::info!("Serving API routes and static frontend from ./static/");
 
     HttpServer::new(move || {
         let cors = Cors::default()
@@ -86,14 +85,13 @@ async fn main() -> std::io::Result<()> {
             .configure(routes::voice::configure)
             .configure(routes::messages::configure)
             .configure(routes::webhooks::configure)
-            // Static files - serve actual files with correct MIME types
+            // Serve index.html at root
+            .route("/", web::get().to(index))
+            // Static files with correct MIME types
             .service(
                 fs::Files::new("/", "./static")
                     .prefer_utf8(true)
-                    .use_last_modified(true)
             )
-            // SPA fallback for client-side routing (only for non-file routes)
-            .default_service(web::to(spa_fallback))
     })
     .bind(("0.0.0.0", port))?
     .workers(num_cpus::get().max(2))
