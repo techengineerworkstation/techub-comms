@@ -49,7 +49,7 @@ where
             h.insert(HeaderName::from_static("permissions-policy"), HeaderValue::from_static("camera=(), microphone=(), geolocation=(), payment=()"));
             h.insert(HeaderName::from_static("strict-transport-security"), HeaderValue::from_static("max-age=31536000; includeSubDomains; preload"));
             h.insert(HeaderName::from_static("content-security-policy"), HeaderValue::from_static(
-                "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://static.opentok.com; \
+                "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' https://static.opentok.com; \
                  style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; \
                  connect-src 'self' https://video.api.vonage.com https://rest.nexmo.com wss://*.opentok.com; \
                  media-src 'self' blob:; font-src 'self' data:; frame-src 'self' https://*.opentok.com;"
